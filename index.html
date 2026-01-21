@@ -3,152 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RCNB Social | Elite Edition</title>
+    <title>RCNB | OFFICIAL</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-storage-compat.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root { 
-            --main: #00d2ff; 
-            --accent: #00a884;
-            --bg: #0f171e; 
-            --panel: #1b2730; 
-            --sidebar: #131c21; 
-            --text: #f0f2f5; 
-            --msg-out: #005c4b; 
-            --msg-in: #263541;
-            --online: #00ffb2;
+        :root {
+            --bg-main: #0e1621;      /* Глубокий темный (как в ТГ) */
+            --bg-side: #17212b;      /* Панель контактов */
+            --bg-nav: #0e1114;       /* Узкая полоска слева */
+            --accent: #24a1de;       /* Синий акцент */
+            --text: #f5f5f5;
+            --text-dim: #708499;
+            --online: #42b72a;
         }
 
-        body, html { height: 100%; margin: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
-        #main-app { display: none; height: 100vh; grid-template-columns: 70px 350px 1fr; }
+        * { box-sizing: border-box; }
+        body, html { height: 100%; margin: 0; font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; background: var(--bg-main); color: var(--text); overflow: hidden; }
+        
+        #main-app { display: none; height: 100vh; grid-template-columns: 70px 320px 1fr; }
 
-        /* НАВИГАЦИЯ СЛЕВА */
-        .nav-rail { background: #0a1014; display: flex; flex-direction: column; align-items: center; padding: 25px 0; gap: 30px; border-right: 1px solid rgba(255,255,255,0.05); }
-        .nav-item { color: #8696a0; font-size: 22px; cursor: pointer; transition: 0.3s; position: relative; width: 100%; text-align: center; }
+        /* ЛЕВАЯ НАВИГАЦИЯ (ЧЕРНАЯ) */
+        .nav-rail { background: var(--bg-nav); display: flex; flex-direction: column; align-items: center; padding: 20px 0; gap: 25px; }
+        .nav-item { color: var(--text-dim); font-size: 22px; cursor: pointer; transition: 0.2s; }
         .nav-item:hover, .nav-item.active { color: var(--accent); }
-        .nav-item.active::after { content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 4px; background: var(--accent); box-shadow: 0 0 15px var(--accent); }
 
-        /* САЙДБАР */
-        .sidebar { background: var(--sidebar); display: flex; flex-direction: column; border-right: 1px solid #222d34; }
-        .sidebar-header { padding: 20px; background: var(--panel); display: flex; align-items: center; gap: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        /* САЙДБАР (КОНТАКТЫ) */
+        .sidebar { background: var(--bg-side); border-right: 1px solid rgba(0,0,0,0.2); display: flex; flex-direction: column; }
+        .sidebar-header { padding: 15px; background: var(--bg-side); border-bottom: 1px solid rgba(0,0,0,0.2); font-weight: bold; font-size: 18px; }
         
-        /* КОНТЕЙНЕР АВАТАРА СО СТАТУСОМ */
-        .avatar-wrapper { position: relative; width: 45px; height: 45px; flex-shrink: 0; }
-        .avatar-wrapper img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 1px solid rgba(255,255,255,0.1); }
-        .status-badge { 
-            position: absolute; bottom: 1px; right: 1px; width: 12px; height: 12px; 
-            border-radius: 50%; border: 2.5px solid var(--sidebar); background: #3e4a56; 
-            transition: 0.3s;
-        }
-        .status-badge.online { background: var(--online); box-shadow: 0 0 8px var(--online); }
-
-        .sidebar-title { padding: 20px 20px 10px; font-size: 12px; color: var(--accent); font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; }
         .list-container { flex: 1; overflow-y: auto; }
-        .contact { display: flex; align-items: center; padding: 15px 20px; cursor: pointer; transition: 0.2s; border-bottom: 1px solid rgba(255,255,255,0.02); }
-        .contact:hover { background: #2a3942; }
-        .contact-name { font-weight: 600; font-size: 15px; margin-bottom: 2px; }
-
-        /* ОБЛАСТЬ ЧАТА */
-        .content-area { position: relative; height: 100%; background: #0b141a; }
-        #chat-view { display: flex; flex-direction: column; height: 100%; }
-        .chat-top-bar { padding: 10px 25px; background: var(--panel); height: 65px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .contact { display: flex; align-items: center; padding: 12px 15px; cursor: pointer; transition: 0.1s; border-bottom: 1px solid rgba(0,0,0,0.1); }
+        .contact:hover { background: #202b36; }
         
-        .messages { 
-            flex: 1; padding: 25px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; 
-            background: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); 
-            background-blend-mode: overlay; background-color: rgba(11,20,26,0.94); 
+        /* АВАТАР И СТАТУС */
+        .avatar-box { position: relative; width: 48px; height: 48px; min-width: 48px; }
+        .avatar-box img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+        .status-badge { 
+            position: absolute; bottom: 2px; right: 2px; width: 12px; height: 12px; 
+            background: #888; border: 2px solid var(--bg-side); border-radius: 50%; 
         }
+        .status-badge.online { background: var(--online); }
+
+        .contact-info { margin-left: 15px; overflow: hidden; }
+        .contact-name { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .contact-status { font-size: 13px; color: var(--text-dim); }
+
+        /* ЧАТ */
+        .chat-area { display: flex; flex-direction: column; background: var(--bg-main); position: relative; }
+        .chat-header { height: 60px; background: var(--bg-side); display: flex; align-items: center; padding: 0 20px; justify-content: space-between; border-bottom: 1px solid rgba(0,0,0,0.2); }
         
-        .msg { max-width: 65%; padding: 9px 15px; border-radius: 14px; font-size: 14.5px; line-height: 1.4; color: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
-        .msg.sent { align-self: flex-end; background: var(--msg-out); border-bottom-right-radius: 2px; }
-        .msg.received { align-self: flex-start; background: var(--msg-in); border-bottom-left-radius: 2px; }
+        .messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-blend-mode: overlay; background-color: #0e1621; }
+        
+        .msg { max-width: 70%; padding: 8px 14px; border-radius: 10px; font-size: 15px; line-height: 1.4; color: #fff; }
+        .msg.sent { align-self: flex-end; background: #2b5278; border-bottom-right-radius: 2px; }
+        .msg.received { align-self: flex-start; background: #182533; border-bottom-left-radius: 2px; }
+
+        /* ВВОД */
+        .input-box { padding: 15px 20px; background: var(--bg-side); display: flex; gap: 15px; }
+        input[type="text"] { flex: 1; background: #242f3d; border: none; padding: 12px 15px; border-radius: 8px; color: #fff; outline: none; }
+        .btn-send { background: none; border: none; color: var(--accent); font-size: 22px; cursor: pointer; }
 
         /* ЗВОНКИ */
-        #call-overlay { display: none; position: absolute; inset: 0; background: #000; z-index: 1000; flex-direction: column; align-items: center; justify-content: center; }
+        #call-ui { display: none; position: absolute; inset: 0; background: #000; z-index: 9999; flex-direction: column; align-items: center; justify-content: center; }
         #remote-video { width: 100%; height: 100%; object-fit: cover; }
-        #local-video { width: 120px; height: 160px; position: absolute; top: 30px; right: 30px; border-radius: 12px; border: 2px solid var(--accent); z-index: 1001; }
-        .call-actions { position: absolute; bottom: 60px; display: flex; gap: 25px; z-index: 1002; }
-        .call-btn { width: 65px; height: 65px; border-radius: 50%; border: none; color: white; cursor: pointer; font-size: 24px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+        #local-video { width: 120px; height: 160px; position: absolute; top: 20px; right: 20px; border-radius: 8px; border: 1px solid #fff; }
+        .call-btns { position: absolute; bottom: 40px; display: flex; gap: 30px; }
+        .c-btn { width: 60px; height: 60px; border-radius: 50%; border: none; color: #fff; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-        /* ИНПУТ */
-        .input-area { padding: 15px 25px; background: var(--panel); display: flex; gap: 15px; align-items: center; }
-        input[type="text"] { background: #2a3942; border: none; padding: 12px 18px; border-radius: 12px; color: white; outline: none; flex: 1; font-size: 15px; }
-        .btn-send { background: var(--accent); color: white; border: none; width: 45px; height: 45px; border-radius: 12px; cursor: pointer; font-size: 18px; transition: 0.2s; }
-        .btn-send:hover { transform: scale(1.05); }
-
-        #login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: var(--bg); }
-        .login-card { text-align: center; background: var(--panel); padding: 50px; border-radius: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
+        /* ВХОД */
+        #login-page { display: flex; align-items: center; justify-content: center; height: 100vh; background: var(--bg-nav); }
+        .login-box { background: var(--bg-side); padding: 40px; border-radius: 15px; text-align: center; width: 350px; }
+        .btn-google { background: var(--accent); color: #fff; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 20px; }
     </style>
 </head>
 <body>
 
-<div id="login-screen">
-    <div class="login-card">
-        <h1 style="color: var(--accent); font-size: 70px; margin: 0; letter-spacing: -3px;">RCNB</h1>
-        <p style="color: #8696a0; margin-bottom: 30px;">Элитный мессенджер</p>
-        <button onclick="login()" style="background: var(--accent); color: white; border: none; padding: 15px 40px; border-radius: 50px; font-weight: 700; cursor: pointer; font-size: 16px;">Войти через Google</button>
+<div id="login-page">
+    <div class="login-box">
+        <h1 style="color:var(--accent); margin:0; font-size:48px;">RCNB</h1>
+        <p style="color:var(--text-dim)">Мессенджер 2026</p>
+        <button class="btn-google" onclick="login()">ВОЙТИ ЧЕРЕЗ GOOGLE</button>
     </div>
 </div>
 
 <div id="main-app">
-    <div id="call-overlay">
+    <div id="call-ui">
         <video id="remote-video" autoplay playsinline></video>
         <video id="local-video" autoplay playsinline muted></video>
-        <div class="call-actions">
-            <button id="btn-ans" class="call-btn" style="background:#25d366; display:none"><i class="fa fa-phone"></i></button>
-            <button onclick="hangUp()" class="call-btn" style="background:#ea4335"><i class="fa fa-phone-slash"></i></button>
+        <div class="call-btns">
+            <button id="btn-ans" class="c-btn" style="background:#42b72a; display:none"><i class="fa fa-phone"></i></button>
+            <button onclick="hangUp()" class="c-btn" style="background:#e53935"><i class="fa fa-phone-slash"></i></button>
         </div>
     </div>
 
     <div class="nav-rail">
-        <div class="nav-item active" id="n-chat" onclick="showView('chat')"><i class="fa fa-comments"></i></div>
-        <div class="nav-item" id="n-all" onclick="showView('all')"><i class="fa fa-users"></i></div>
-        <div class="nav-item" id="n-feed" onclick="showView('feed')"><i class="fa fa-rss"></i></div>
-        <div class="nav-item" id="n-set" onclick="showView('settings')"><i class="fa fa-cog"></i></div>
-        <div class="nav-item" onclick="logout()" style="margin-top: auto; opacity: 0.4;"><i class="fa fa-power-off"></i></div>
+        <div class="nav-item active" onclick="showView('chats')"><i class="fa fa-paper-plane"></i></div>
+        <div class="nav-item" onclick="showView('all')"><i class="fa fa-search"></i></div>
+        <div class="nav-item" onclick="showView('feed')"><i class="fa fa-th-large"></i></div>
+        <div class="nav-item" onclick="logout()" style="margin-top:auto"><i class="fa fa-sign-out-alt"></i></div>
     </div>
 
     <div class="sidebar">
-        <div class="sidebar-header">
-            <div class="avatar-wrapper">
-                <img id="my-pic" src="">
-                <div class="status-badge online"></div>
-            </div>
-            <b id="my-name">Загрузка...</b>
-        </div>
-        <div id="sb-label" class="sidebar-title">Мои диалоги</div>
-        <div class="list-container" id="sb-list"></div>
+        <div class="sidebar-header" id="sidebar-title">Диалоги</div>
+        <div class="list-container" id="user-list"></div>
     </div>
 
-    <div class="content-area">
-        <div id="chat-view">
-            <div class="chat-top-bar">
-                <b id="chat-target">Выберите чат</b>
-                <div id="call-btns" style="display:none; gap:25px;">
-                    <i class="fa fa-phone" onclick="makeCall(false)" style="color:var(--accent); cursor:pointer; font-size:20px;"></i>
-                    <i class="fa fa-video" onclick="makeCall(true)" style="color:var(--accent); cursor:pointer; font-size:20px;"></i>
-                </div>
-            </div>
-            <div class="messages" id="messages"></div>
-            <div class="input-area">
-                <input type="text" id="msg-input" placeholder="Введите сообщение..." onkeypress="if(event.key==='Enter') sendMsg()">
-                <button onclick="sendMsg()" class="btn-send"><i class="fa fa-paper-plane"></i></button>
+    <div class="chat-area">
+        <div class="chat-header">
+            <b id="active-user-name">Выберите чат</b>
+            <div id="call-actions" style="display:none; gap:20px;">
+                <i class="fa fa-phone" onclick="startCall(false)" style="cursor:pointer; color:var(--accent)"></i>
+                <i class="fa fa-video" onclick="startCall(true)" style="cursor:pointer; color:var(--accent)"></i>
             </div>
         </div>
-
-        <div id="feed-view" style="display:none; padding:40px; overflow-y:auto;">
-            <div id="feed-cont" style="max-width:600px; margin:0 auto;"></div>
-        </div>
-
-        <div id="settings-view" style="display:none; padding:50px;">
-            <div style="max-width:400px; background:var(--panel); padding:30px; border-radius:20px;">
-                <h2 style="margin-top:0">Настройки</h2>
-                <input type="text" id="set-name-input" placeholder="Ваше имя" style="width:100%; box-sizing:border-box;">
-                <button onclick="saveName()" class="btn-send" style="width:100%; margin-top:15px; border-radius:8px;">Сохранить</button>
-            </div>
+        <div class="messages" id="messages"></div>
+        <div class="input-box">
+            <input type="text" id="msg-input" placeholder="Написать сообщение..." onkeypress="if(event.key==='Enter') send()">
+            <button class="btn-send" onclick="send()"><i class="fa fa-chevron-right"></i></button>
         </div>
     </div>
 </div>
@@ -164,65 +137,49 @@
     };
 
     firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth(), db = firebase.firestore(), provider = new firebase.auth.GoogleAuthProvider();
-
-    let me = null, activeChat = null, pc = null, localStream = null;
+    const auth = firebase.auth(), db = firebase.firestore();
+    let me = null, activeId = null, pc = null, localStream = null;
 
     auth.onAuthStateChanged(user => {
-        if (user) {
+        if(user) {
             me = user;
-            document.getElementById('login-screen').style.display = 'none';
+            document.getElementById('login-page').style.display = 'none';
             document.getElementById('main-app').style.display = 'grid';
             
-            // Статус онлайн
-            const uRef = db.collection("users").doc(user.uid);
-            uRef.set({ name: user.displayName, photo: user.photoURL, uid: user.uid, online: true }, {merge:true});
+            // Статус в базе
+            const ref = db.collection("users").doc(user.uid);
+            ref.set({ name: user.displayName, photo: user.photoURL, uid: user.uid, online: true }, {merge:true});
+            window.onbeforeunload = () => { ref.update({online: false}); };
             
-            // Оффлайн при выходе
-            window.addEventListener('beforeunload', () => uRef.update({ online: false }));
-
-            uRef.onSnapshot(doc => {
-                const d = doc.data();
-                document.getElementById('my-pic').src = d.photo;
-                document.getElementById('my-name').innerText = d.name;
-            });
-
-            showView('chat');
-            listenCalls();
+            loadList('chats');
+            listenInbound();
         } else {
-            document.getElementById('login-screen').style.display = 'flex';
+            document.getElementById('login-page').style.display = 'flex';
         }
     });
 
-    function login() { auth.signInWithPopup(provider); }
+    function login() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
     function logout() { db.collection("users").doc(me.uid).update({online:false}).then(()=>auth.signOut()); }
 
-    function showView(v) {
-        ['chat-view', 'feed-view', 'settings-view'].forEach(id => document.getElementById(id).style.display = id.includes(v) ? 'flex' : 'none');
-        document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-        document.getElementById('n-'+v.substring(0,4)).classList.add('active');
-        if(v === 'chat') loadSidebar('chats');
-        if(v === 'all') loadSidebar('all');
-    }
+    function showView(v) { loadList(v); }
 
-    function loadSidebar(type) {
-        document.getElementById('sb-label').innerText = type === 'all' ? "Все пользователи" : "Мои диалоги";
+    function loadList(mode) {
+        document.getElementById('sidebar-title').innerText = mode === 'all' ? "Все люди" : "Диалоги";
         db.collection("users").onSnapshot(snap => {
-            const list = document.getElementById('sb-list'); list.innerHTML = "";
+            const container = document.getElementById('user-list');
+            container.innerHTML = "";
             snap.forEach(doc => {
                 const u = doc.data();
                 if(u.uid !== me.uid) {
-                    list.innerHTML += `
+                    container.innerHTML += `
                         <div class="contact" onclick="openChat('${u.uid}', '${u.name}')">
-                            <div class="avatar-wrapper">
+                            <div class="avatar-box">
                                 <img src="${u.photo}">
                                 <div class="status-badge ${u.online ? 'online' : ''}"></div>
                             </div>
-                            <div style="margin-left:15px">
+                            <div class="contact-info">
                                 <div class="contact-name">${u.name}</div>
-                                <div style="font-size:12px; color:${u.online ? 'var(--online)' : '#8696a0'}">
-                                    ${u.online ? 'в сети' : 'был недавно'}
-                                </div>
+                                <div class="contact-status">${u.online ? 'в сети' : 'оффлайн'}</div>
                             </div>
                         </div>`;
                 }
@@ -230,55 +187,62 @@
         });
     }
 
-    function openChat(uid, name) {
-        activeChat = uid;
-        document.getElementById('chat-target').innerText = name;
-        document.getElementById('call-btns').style.display = 'flex';
-        loadMsgs();
-    }
-
-    function sendMsg() {
-        const i = document.getElementById('msg-input');
-        if(!i.value.trim() || !activeChat) return;
-        db.collection("chats").doc([me.uid, activeChat].sort().join('_')).collection("messages").add({
-            text: i.value, sender: me.uid, time: Date.now()
-        });
-        i.value = "";
-    }
-
-    function loadMsgs() {
-        db.collection("chats").doc([me.uid, activeChat].sort().join('_')).collection("messages").orderBy("time").onSnapshot(snap => {
-            const box = document.getElementById('messages'); box.innerHTML = "";
-            snap.forEach(doc => {
-                const m = doc.data();
-                box.innerHTML += `<div class="msg ${m.sender === me.uid ? 'sent' : 'received'}">${m.text}</div>`;
+    function openChat(id, name) {
+        activeId = id;
+        document.getElementById('active-user-name').innerText = name;
+        document.getElementById('call-actions').style.display = 'flex';
+        
+        const chatId = [me.uid, id].sort().join('_');
+        db.collection("chats").doc(chatId).collection("messages").orderBy("time").onSnapshot(snap => {
+            const box = document.getElementById('messages');
+            box.innerHTML = "";
+            snap.forEach(d => {
+                const m = d.data();
+                box.innerHTML += `<div class="msg ${m.from === me.uid ? 'sent' : 'received'}">${m.text}</div>`;
             });
             box.scrollTop = box.scrollHeight;
         });
     }
 
-    // ЗВОНКИ
-    async function makeCall(video) {
-        document.getElementById('call-overlay').style.display = 'flex';
+    function send() {
+        const i = document.getElementById('msg-input');
+        if(!i.value || !activeId) return;
+        const chatId = [me.uid, activeId].sort().join('_');
+        db.collection("chats").doc(chatId).collection("messages").add({
+            from: me.uid, text: i.value, time: Date.now()
+        });
+        i.value = "";
+    }
+
+    // ЗВОНКИ (ОБНОВЛЕННЫЙ ENGINE)
+    async function startCall(video) {
+        document.getElementById('call-ui').style.display = 'flex';
         localStream = await navigator.mediaDevices.getUserMedia({audio:true, video:video});
         document.getElementById('local-video').srcObject = localStream;
+        
         pc = new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});
         localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
         pc.ontrack = e => document.getElementById('remote-video').srcObject = e.streams[0];
-        const callDoc = db.collection('calls').doc(activeChat);
-        pc.onicecandidate = e => e.candidate && callDoc.collection('offCands').add(e.candidate.toJSON());
+        
+        const callRef = db.collection('calls').doc(activeId);
+        pc.onicecandidate = e => e.candidate && callRef.collection('cands').add(e.candidate.toJSON());
+        
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
-        await callDoc.set({offer, caller:me.displayName, video});
-        callDoc.onSnapshot(s => { const d = s.data(); if(d?.answer && !pc.currentRemoteDescription) pc.setRemoteDescription(new RTCSessionDescription(d.answer)); });
-        callDoc.collection('ansCands').onSnapshot(s => s.docChanges().forEach(c => c.type==='added' && pc.addIceCandidate(new RTCIceCandidate(c.doc.data()))));
+        await callRef.set({offer, from: me.displayName, video});
+
+        callRef.onSnapshot(s => {
+            const d = s.data();
+            if(d?.answer && !pc.currentRemoteDescription) pc.setRemoteDescription(new RTCSessionDescription(d.answer));
+        });
+        callRef.collection('cands').onSnapshot(s => s.docChanges().forEach(c => c.type==='added' && pc.addIceCandidate(new RTCIceCandidate(c.doc.data()))));
     }
 
-    function listenCalls() {
+    function listenInbound() {
         db.collection('calls').doc(me.uid).onSnapshot(async s => {
             const d = s.data();
             if(d && d.offer && !pc) {
-                document.getElementById('call-overlay').style.display = 'flex';
+                document.getElementById('call-ui').style.display = 'flex';
                 document.getElementById('btn-ans').style.display = 'flex';
                 document.getElementById('btn-ans').onclick = async () => {
                     document.getElementById('btn-ans').style.display = 'none';
@@ -287,13 +251,13 @@
                     pc = new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});
                     localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
                     pc.ontrack = e => document.getElementById('remote-video').srcObject = e.streams[0];
-                    const callDoc = db.collection('calls').doc(me.uid);
-                    pc.onicecandidate = e => e.candidate && callDoc.collection('ansCands').add(e.candidate.toJSON());
+                    
+                    const callRef = db.collection('calls').doc(me.uid);
+                    pc.onicecandidate = e => e.candidate && callRef.collection('cands').add(e.candidate.toJSON());
                     await pc.setRemoteDescription(new RTCSessionDescription(d.offer));
                     const ans = await pc.createAnswer();
                     await pc.setLocalDescription(ans);
-                    await callDoc.update({answer:ans});
-                    callDoc.collection('offCands').onSnapshot(s => s.docChanges().forEach(c => c.type==='added' && pc.addIceCandidate(new RTCIceCandidate(c.doc.data()))));
+                    await callRef.update({answer:ans});
                 }
             }
             if(!d && pc) hangUp();
@@ -301,15 +265,11 @@
     }
 
     function hangUp() {
-        if(pc) pc.close(); if(localStream) localStream.getTracks().forEach(t => t.stop());
+        if(pc) pc.close();
+        if(localStream) localStream.getTracks().forEach(t => t.stop());
         pc = null; localStream = null;
         db.collection('calls').doc(me.uid).delete();
-        document.getElementById('call-overlay').style.display = 'none';
-    }
-
-    function saveName() {
-        const n = document.getElementById('set-name-input').value;
-        if(n) db.collection("users").doc(me.uid).update({name: n}).then(()=>alert("Имя обновлено"));
+        document.getElementById('call-ui').style.display = 'none';
     }
 </script>
 </body>
