@@ -2,275 +2,213 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RCNB | OFFICIAL</title>
+    <title>RCNB OFFICIAL | VOICE FIX</title>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root {
-            --bg-main: #0e1621;      /* Глубокий темный (как в ТГ) */
-            --bg-side: #17212b;      /* Панель контактов */
-            --bg-nav: #0e1114;       /* Узкая полоска слева */
-            --accent: #24a1de;       /* Синий акцент */
-            --text: #f5f5f5;
-            --text-dim: #708499;
-            --online: #42b72a;
-        }
-
-        * { box-sizing: border-box; }
-        body, html { height: 100%; margin: 0; font-family: -apple-system, system-ui, "Segoe UI", Roboto, sans-serif; background: var(--bg-main); color: var(--text); overflow: hidden; }
+        :root { --bg: #0e1621; --side: #17212b; --accent: #24a1de; --online: #4cc351; --msg-my: #2b5278; --msg-his: #182533; }
+        body, html { height: 100%; margin: 0; font-family: 'Segoe UI', Roboto; background: var(--bg); color: #fff; overflow: hidden; }
+        #app { display: none; height: 100vh; grid-template-columns: 320px 1fr; }
+        .sidebar { background: var(--side); border-right: 1px solid #000; display: flex; flex-direction: column; }
+        .user-item { display: flex; align-items: center; padding: 12px; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.1); }
+        .user-item:hover { background: #202b36; }
+        .avatar { position: relative; width: 45px; height: 45px; margin-right: 12px; }
+        .avatar img { width: 100%; height: 100%; border-radius: 50%; }
+        .dot { position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--side); background: #555; }
+        .dot.on { background: var(--online); box-shadow: 0 0 10px var(--online); }
+        .chat { display: flex; flex-direction: column; position: relative; }
+        .chat-header { height: 60px; background: var(--side); display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid #000; }
+        .messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; background: #0e1621; }
+        .msg { max-width: 70%; padding: 8px 14px; border-radius: 12px; font-size: 15px; }
+        .msg.my { align-self: flex-end; background: var(--msg-my); }
+        .msg.his { align-self: flex-start; background: var(--msg-his); }
+        .input-area { padding: 15px; background: var(--side); display: flex; gap: 10px; }
+        input { flex: 1; background: #242f3d; border: none; padding: 10px 15px; border-radius: 8px; color: #fff; outline: none; }
         
-        #main-app { display: none; height: 100vh; grid-template-columns: 70px 320px 1fr; }
-
-        /* ЛЕВАЯ НАВИГАЦИЯ (ЧЕРНАЯ) */
-        .nav-rail { background: var(--bg-nav); display: flex; flex-direction: column; align-items: center; padding: 20px 0; gap: 25px; }
-        .nav-item { color: var(--text-dim); font-size: 22px; cursor: pointer; transition: 0.2s; }
-        .nav-item:hover, .nav-item.active { color: var(--accent); }
-
-        /* САЙДБАР (КОНТАКТЫ) */
-        .sidebar { background: var(--bg-side); border-right: 1px solid rgba(0,0,0,0.2); display: flex; flex-direction: column; }
-        .sidebar-header { padding: 15px; background: var(--bg-side); border-bottom: 1px solid rgba(0,0,0,0.2); font-weight: bold; font-size: 18px; }
-        
-        .list-container { flex: 1; overflow-y: auto; }
-        .contact { display: flex; align-items: center; padding: 12px 15px; cursor: pointer; transition: 0.1s; border-bottom: 1px solid rgba(0,0,0,0.1); }
-        .contact:hover { background: #202b36; }
-        
-        /* АВАТАР И СТАТУС */
-        .avatar-box { position: relative; width: 48px; height: 48px; min-width: 48px; }
-        .avatar-box img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
-        .status-badge { 
-            position: absolute; bottom: 2px; right: 2px; width: 12px; height: 12px; 
-            background: #888; border: 2px solid var(--bg-side); border-radius: 50%; 
-        }
-        .status-badge.online { background: var(--online); }
-
-        .contact-info { margin-left: 15px; overflow: hidden; }
-        .contact-name { font-weight: 600; font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .contact-status { font-size: 13px; color: var(--text-dim); }
-
-        /* ЧАТ */
-        .chat-area { display: flex; flex-direction: column; background: var(--bg-main); position: relative; }
-        .chat-header { height: 60px; background: var(--bg-side); display: flex; align-items: center; padding: 0 20px; justify-content: space-between; border-bottom: 1px solid rgba(0,0,0,0.2); }
-        
-        .messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-blend-mode: overlay; background-color: #0e1621; }
-        
-        .msg { max-width: 70%; padding: 8px 14px; border-radius: 10px; font-size: 15px; line-height: 1.4; color: #fff; }
-        .msg.sent { align-self: flex-end; background: #2b5278; border-bottom-right-radius: 2px; }
-        .msg.received { align-self: flex-start; background: #182533; border-bottom-left-radius: 2px; }
-
-        /* ВВОД */
-        .input-box { padding: 15px 20px; background: var(--bg-side); display: flex; gap: 15px; }
-        input[type="text"] { flex: 1; background: #242f3d; border: none; padding: 12px 15px; border-radius: 8px; color: #fff; outline: none; }
-        .btn-send { background: none; border: none; color: var(--accent); font-size: 22px; cursor: pointer; }
-
-        /* ЗВОНКИ */
-        #call-ui { display: none; position: absolute; inset: 0; background: #000; z-index: 9999; flex-direction: column; align-items: center; justify-content: center; }
+        /* CALL UI 2018 ELITE */
+        #call-ui { display: none; position: fixed; inset: 0; background: #000; z-index: 9999; flex-direction: column; align-items: center; justify-content: center; }
         #remote-video { width: 100%; height: 100%; object-fit: cover; }
-        #local-video { width: 120px; height: 160px; position: absolute; top: 20px; right: 20px; border-radius: 8px; border: 1px solid #fff; }
-        .call-btns { position: absolute; bottom: 40px; display: flex; gap: 30px; }
-        .c-btn { width: 60px; height: 60px; border-radius: 50%; border: none; color: #fff; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-
-        /* ВХОД */
-        #login-page { display: flex; align-items: center; justify-content: center; height: 100vh; background: var(--bg-nav); }
-        .login-box { background: var(--bg-side); padding: 40px; border-radius: 15px; text-align: center; width: 350px; }
-        .btn-google { background: var(--accent); color: #fff; border: none; padding: 12px 25px; border-radius: 8px; font-weight: bold; cursor: pointer; width: 100%; margin-top: 20px; }
+        #local-video { width: 120px; position: absolute; top: 20px; right: 20px; border-radius: 10px; border: 1px solid var(--accent); }
+        .call-info { position: absolute; top: 15%; text-align: center; z-index: 10; }
+        .call-btns { position: absolute; bottom: 10%; display: flex; gap: 40px; z-index: 10; }
+        .c-btn { width: 65px; height: 65px; border-radius: 50%; border: none; color: #fff; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
+        #login { display: flex; height: 100vh; align-items: center; justify-content: center; }
     </style>
 </head>
 <body>
 
-<div id="login-page">
-    <div class="login-box">
-        <h1 style="color:var(--accent); margin:0; font-size:48px;">RCNB</h1>
-        <p style="color:var(--text-dim)">Мессенджер 2026</p>
-        <button class="btn-google" onclick="login()">ВОЙТИ ЧЕРЕЗ GOOGLE</button>
+<div id="login"><button onclick="login()" style="padding:15px 40px; border-radius:10px; background:var(--accent); color:#fff; border:none; cursor:pointer; font-weight:bold;">ВОЙТИ В RCNB</button></div>
+
+<div id="app">
+    <div class="sidebar">
+        <div style="padding:15px; font-weight:bold; border-bottom:1px solid #000;">RCNB OFFICIAL</div>
+        <div id="u-list"></div>
+    </div>
+    <div class="chat">
+        <div class="chat-header">
+            <b id="chat-with">Чат не выбран</b>
+            <div id="call-box" style="display:none; margin-left:auto; gap:20px;">
+                <i class="fa fa-phone" onclick="startCall(false)" style="color:var(--accent); cursor:pointer"></i>
+                <i class="fa fa-video" onclick="startCall(true)" style="color:var(--accent); cursor:pointer"></i>
+            </div>
+        </div>
+        <div class="messages" id="msgs"></div>
+        <div class="input-area"><input type="text" id="m-in" placeholder="Сообщение..." onkeypress="if(event.key==='Enter') send()"></div>
     </div>
 </div>
 
-<div id="main-app">
-    <div id="call-ui">
-        <video id="remote-video" autoplay playsinline></video>
-        <video id="local-video" autoplay playsinline muted></video>
-        <div class="call-btns">
-            <button id="btn-ans" class="c-btn" style="background:#42b72a; display:none"><i class="fa fa-phone"></i></button>
-            <button onclick="hangUp()" class="c-btn" style="background:#e53935"><i class="fa fa-phone-slash"></i></button>
-        </div>
+<div id="call-ui">
+    <div class="call-info">
+        <img id="call-img" src="" style="width:120px; height:120px; border-radius:50%; margin-bottom:15px;">
+        <h2 id="call-name">Имя</h2>
+        <p id="call-status">Вызов...</p>
     </div>
-
-    <div class="nav-rail">
-        <div class="nav-item active" onclick="showView('chats')"><i class="fa fa-paper-plane"></i></div>
-        <div class="nav-item" onclick="showView('all')"><i class="fa fa-search"></i></div>
-        <div class="nav-item" onclick="showView('feed')"><i class="fa fa-th-large"></i></div>
-        <div class="nav-item" onclick="logout()" style="margin-top:auto"><i class="fa fa-sign-out-alt"></i></div>
-    </div>
-
-    <div class="sidebar">
-        <div class="sidebar-header" id="sidebar-title">Диалоги</div>
-        <div class="list-container" id="user-list"></div>
-    </div>
-
-    <div class="chat-area">
-        <div class="chat-header">
-            <b id="active-user-name">Выберите чат</b>
-            <div id="call-actions" style="display:none; gap:20px;">
-                <i class="fa fa-phone" onclick="startCall(false)" style="cursor:pointer; color:var(--accent)"></i>
-                <i class="fa fa-video" onclick="startCall(true)" style="cursor:pointer; color:var(--accent)"></i>
-            </div>
-        </div>
-        <div class="messages" id="messages"></div>
-        <div class="input-box">
-            <input type="text" id="msg-input" placeholder="Написать сообщение..." onkeypress="if(event.key==='Enter') send()">
-            <button class="btn-send" onclick="send()"><i class="fa fa-chevron-right"></i></button>
-        </div>
+    <video id="remote-video" autoplay playsinline></video>
+    <video id="local-video" autoplay playsinline muted></video>
+    <div class="call-btns">
+        <button id="ans-btn" class="c-btn" style="background:var(--online); display:none;"><i class="fa fa-phone"></i></button>
+        <button onclick="hangUp()" class="c-btn" style="background:#f44336;"><i class="fa fa-phone-slash"></i></button>
     </div>
 </div>
 
 <script>
-    const firebaseConfig = {
-        apiKey: "AIzaSyDch7p3qsay4twoc3GcXI2Z7YI5iHazuHs",
-        authDomain: "rcnb-messenger.firebaseapp.com",
-        projectId: "rcnb-messenger",
-        storageBucket: "rcnb-messenger.firebasestorage.app",
-        messagingSenderId: "131047901393",
-        appId: "1:131047901393:web:d6f5ae21a875b6aef75df0"
+const firebaseConfig = {
+    apiKey: "AIzaSyDch7p3qsay4twoc3GcXI2Z7YI5iHazuHs",
+    authDomain: "rcnb-messenger.firebaseapp.com",
+    projectId: "rcnb-messenger",
+    storageBucket: "rcnb-messenger.firebasestorage.app",
+    messagingSenderId: "131047901393",
+    appId: "1:131047901393:web:d6f5ae21a875b6aef75df0"
+};
+
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth(), db = firebase.firestore();
+let me = null, activePeer = null, pc = null, localStream = null;
+
+auth.onAuthStateChanged(u => {
+    if(u) {
+        me = u; document.getElementById('login').style.display='none'; document.getElementById('app').style.display='grid';
+        db.collection("users").doc(u.uid).set({name: u.displayName, photo: u.photoURL, uid: u.uid, online: true}, {merge:true});
+        window.onbeforeunload = () => db.collection("users").doc(me.uid).update({online: false});
+        loadUsers(); listenCalls();
+    }
+});
+
+function login() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
+
+function loadUsers() {
+    db.collection("users").onSnapshot(snap => {
+        const list = document.getElementById('u-list'); list.innerHTML = "";
+        snap.forEach(doc => {
+            const u = doc.data(); if(u.uid === me.uid) return;
+            list.innerHTML += `
+                <div class="user-item" onclick="openChat('${u.uid}','${u.name}','${u.photo}')">
+                    <div class="avatar"><img src="${u.photo}"><div class="dot ${u.online?'on':''}"></div></div>
+                    <div><b>${u.name}</b><br><small style="color:#708499">${u.online?'в сети':'оффлайн'}</small></div>
+                </div>`;
+        });
+    });
+}
+
+function openChat(id, name, photo) {
+    activePeer = id; document.getElementById('chat-with').innerText = name;
+    document.getElementById('call-box').style.display = 'flex';
+    document.getElementById('call-name').innerText = name;
+    document.getElementById('call-img').src = photo;
+    const cid = [me.uid, id].sort().join('_');
+    db.collection("chats").doc(cid).collection("messages").orderBy("time").onSnapshot(s => {
+        const b = document.getElementById('msgs'); b.innerHTML = "";
+        s.forEach(m => { const d = m.data(); b.innerHTML += `<div class="msg ${d.from===me.uid?'my':'his'}">${d.txt}</div>`; });
+        b.scrollTop = b.scrollHeight;
+    });
+}
+
+function send() {
+    const i = document.getElementById('m-in'); if(!i.value || !activePeer) return;
+    const cid = [me.uid, activePeer].sort().join('_');
+    db.collection("chats").doc(cid).collection("messages").add({from: me.uid, txt: i.value, time: Date.now()});
+    i.value = "";
+}
+
+// CALL ENGINE FIX
+async function startCall(video) {
+    document.getElementById('call-ui').style.display = 'flex';
+    localStream = await navigator.mediaDevices.getUserMedia({audio: true, video: video});
+    document.getElementById('local-video').srcObject = localStream;
+    document.getElementById('local-video').style.display = video ? 'block' : 'none';
+
+    pc = new RTCPeerConnection({iceServers: [{urls:'stun:stun.l.google.com:19302'}]});
+    localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+
+    pc.ontrack = e => {
+        const remoteVid = document.getElementById('remote-video');
+        if (remoteVid.srcObject !== e.streams[0]) {
+            remoteVid.srcObject = e.streams[0];
+            remoteVid.style.display = 'block';
+            console.log("Stream received with tracks:", e.tracks);
+        }
     };
 
-    firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth(), db = firebase.firestore();
-    let me = null, activeId = null, pc = null, localStream = null;
+    const callRef = db.collection('calls').doc(activePeer);
+    pc.onicecandidate = e => e.candidate && callRef.collection('cands').add(e.candidate.toJSON());
+    
+    const offer = await pc.createOffer();
+    await pc.setLocalDescription(offer);
+    await callRef.set({offer, fromName: me.displayName, video, fromPhoto: me.photoURL});
 
-    auth.onAuthStateChanged(user => {
-        if(user) {
-            me = user;
-            document.getElementById('login-page').style.display = 'none';
-            document.getElementById('main-app').style.display = 'grid';
-            
-            // Статус в базе
-            const ref = db.collection("users").doc(user.uid);
-            ref.set({ name: user.displayName, photo: user.photoURL, uid: user.uid, online: true }, {merge:true});
-            window.onbeforeunload = () => { ref.update({online: false}); };
-            
-            loadList('chats');
-            listenInbound();
-        } else {
-            document.getElementById('login-page').style.display = 'flex';
-        }
+    callRef.onSnapshot(s => {
+        const d = s.data();
+        if(d?.answer && !pc.currentRemoteDescription) pc.setRemoteDescription(new RTCSessionDescription(d.answer));
     });
+    callRef.collection('cands').onSnapshot(s => s.docChanges().forEach(c => c.type==='added' && pc.addIceCandidate(new RTCIceCandidate(c.doc.data()))));
+}
 
-    function login() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
-    function logout() { db.collection("users").doc(me.uid).update({online:false}).then(()=>auth.signOut()); }
+function listenCalls() {
+    db.collection('calls').doc(me.uid).onSnapshot(async s => {
+        const d = s.data();
+        if(d && d.offer && !pc) {
+            document.getElementById('call-ui').style.display = 'flex';
+            document.getElementById('call-name').innerText = d.fromName;
+            document.getElementById('call-img').src = d.fromPhoto;
+            document.getElementById('ans-btn').style.display = 'flex';
+            document.getElementById('ans-btn').onclick = async () => {
+                document.getElementById('ans-btn').style.display = 'none';
+                localStream = await navigator.mediaDevices.getUserMedia({audio: true, video: d.video});
+                document.getElementById('local-video').srcObject = localStream;
+                document.getElementById('local-video').style.display = d.video ? 'block' : 'none';
 
-    function showView(v) { loadList(v); }
+                pc = new RTCPeerConnection({iceServers: [{urls:'stun:stun.l.google.com:19302'}]});
+                localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+                pc.ontrack = e => {
+                    const remoteVid = document.getElementById('remote-video');
+                    remoteVid.srcObject = e.streams[0];
+                    remoteVid.style.display = 'block';
+                };
 
-    function loadList(mode) {
-        document.getElementById('sidebar-title').innerText = mode === 'all' ? "Все люди" : "Диалоги";
-        db.collection("users").onSnapshot(snap => {
-            const container = document.getElementById('user-list');
-            container.innerHTML = "";
-            snap.forEach(doc => {
-                const u = doc.data();
-                if(u.uid !== me.uid) {
-                    container.innerHTML += `
-                        <div class="contact" onclick="openChat('${u.uid}', '${u.name}')">
-                            <div class="avatar-box">
-                                <img src="${u.photo}">
-                                <div class="status-badge ${u.online ? 'online' : ''}"></div>
-                            </div>
-                            <div class="contact-info">
-                                <div class="contact-name">${u.name}</div>
-                                <div class="contact-status">${u.online ? 'в сети' : 'оффлайн'}</div>
-                            </div>
-                        </div>`;
-                }
-            });
-        });
-    }
+                const callRef = db.collection('calls').doc(me.uid);
+                pc.onicecandidate = e => e.candidate && callRef.collection('cands').add(e.candidate.toJSON());
+                await pc.setRemoteDescription(new RTCSessionDescription(d.offer));
+                const ans = await pc.createAnswer();
+                await pc.setLocalDescription(ans);
+                await callRef.update({answer: ans});
+                callRef.collection('cands').onSnapshot(s => s.docChanges().forEach(c => c.type==='added' && pc.addIceCandidate(new RTCIceCandidate(c.doc.data()))));
+            };
+        }
+        if(!d && pc) hangUp();
+    });
+}
 
-    function openChat(id, name) {
-        activeId = id;
-        document.getElementById('active-user-name').innerText = name;
-        document.getElementById('call-actions').style.display = 'flex';
-        
-        const chatId = [me.uid, id].sort().join('_');
-        db.collection("chats").doc(chatId).collection("messages").orderBy("time").onSnapshot(snap => {
-            const box = document.getElementById('messages');
-            box.innerHTML = "";
-            snap.forEach(d => {
-                const m = d.data();
-                box.innerHTML += `<div class="msg ${m.from === me.uid ? 'sent' : 'received'}">${m.text}</div>`;
-            });
-            box.scrollTop = box.scrollHeight;
-        });
-    }
-
-    function send() {
-        const i = document.getElementById('msg-input');
-        if(!i.value || !activeId) return;
-        const chatId = [me.uid, activeId].sort().join('_');
-        db.collection("chats").doc(chatId).collection("messages").add({
-            from: me.uid, text: i.value, time: Date.now()
-        });
-        i.value = "";
-    }
-
-    // ЗВОНКИ (ОБНОВЛЕННЫЙ ENGINE)
-    async function startCall(video) {
-        document.getElementById('call-ui').style.display = 'flex';
-        localStream = await navigator.mediaDevices.getUserMedia({audio:true, video:video});
-        document.getElementById('local-video').srcObject = localStream;
-        
-        pc = new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});
-        localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
-        pc.ontrack = e => document.getElementById('remote-video').srcObject = e.streams[0];
-        
-        const callRef = db.collection('calls').doc(activeId);
-        pc.onicecandidate = e => e.candidate && callRef.collection('cands').add(e.candidate.toJSON());
-        
-        const offer = await pc.createOffer();
-        await pc.setLocalDescription(offer);
-        await callRef.set({offer, from: me.displayName, video});
-
-        callRef.onSnapshot(s => {
-            const d = s.data();
-            if(d?.answer && !pc.currentRemoteDescription) pc.setRemoteDescription(new RTCSessionDescription(d.answer));
-        });
-        callRef.collection('cands').onSnapshot(s => s.docChanges().forEach(c => c.type==='added' && pc.addIceCandidate(new RTCIceCandidate(c.doc.data()))));
-    }
-
-    function listenInbound() {
-        db.collection('calls').doc(me.uid).onSnapshot(async s => {
-            const d = s.data();
-            if(d && d.offer && !pc) {
-                document.getElementById('call-ui').style.display = 'flex';
-                document.getElementById('btn-ans').style.display = 'flex';
-                document.getElementById('btn-ans').onclick = async () => {
-                    document.getElementById('btn-ans').style.display = 'none';
-                    localStream = await navigator.mediaDevices.getUserMedia({audio:true, video:d.video});
-                    document.getElementById('local-video').srcObject = localStream;
-                    pc = new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});
-                    localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
-                    pc.ontrack = e => document.getElementById('remote-video').srcObject = e.streams[0];
-                    
-                    const callRef = db.collection('calls').doc(me.uid);
-                    pc.onicecandidate = e => e.candidate && callRef.collection('cands').add(e.candidate.toJSON());
-                    await pc.setRemoteDescription(new RTCSessionDescription(d.offer));
-                    const ans = await pc.createAnswer();
-                    await pc.setLocalDescription(ans);
-                    await callRef.update({answer:ans});
-                }
-            }
-            if(!d && pc) hangUp();
-        });
-    }
-
-    function hangUp() {
-        if(pc) pc.close();
-        if(localStream) localStream.getTracks().forEach(t => t.stop());
-        pc = null; localStream = null;
-        db.collection('calls').doc(me.uid).delete();
-        document.getElementById('call-ui').style.display = 'none';
-    }
+function hangUp() {
+    if(pc) pc.close();
+    if(localStream) localStream.getTracks().forEach(t => t.stop());
+    pc = null; localStream = null;
+    db.collection('calls').doc(me.uid).delete();
+    db.collection('calls').doc(activePeer || 'null').delete();
+    document.getElementById('call-ui').style.display = 'none';
+    document.getElementById('remote-video').srcObject = null;
+}
 </script>
 </body>
 </html>
