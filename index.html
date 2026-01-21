@@ -11,124 +11,143 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root { 
-            --main: #00a884; 
-            --bg: #0b141a; 
-            --panel: #202c33; 
-            --sidebar: #111b21; 
-            --text: #e9edef; 
+            --main: #00d2ff; 
+            --accent: #00a884;
+            --bg: #0f171e; 
+            --panel: #1b2730; 
+            --sidebar: #131c21; 
+            --text: #f0f2f5; 
             --msg-out: #005c4b; 
-            --msg-in: #202c33;
-            --online: #00dfa2;
+            --msg-in: #263541;
+            --online: #00ffb2;
         }
 
-        body, html { height: 100%; margin: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
-        #main-app { display: none; height: 100vh; grid-template-columns: 65px 350px 1fr; }
+        body, html { height: 100%; margin: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); overflow: hidden; }
+        #main-app { display: none; height: 100vh; grid-template-columns: 70px 350px 1fr; }
 
-        /* NAV RAIL */
-        .nav-rail { background: var(--sidebar); display: flex; flex-direction: column; align-items: center; padding: 25px 0; gap: 28px; border-right: 1px solid rgba(255,255,255,0.05); }
-        .nav-item { color: #8696a0; font-size: 20px; cursor: pointer; transition: 0.2s ease; position: relative; width: 100%; text-align: center; }
-        .nav-item:hover, .nav-item.active { color: var(--main); }
-        .nav-item.active::after { content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 3px; background: var(--main); }
+        /* НАВИГАЦИЯ СЛЕВА */
+        .nav-rail { background: #0a1014; display: flex; flex-direction: column; align-items: center; padding: 25px 0; gap: 30px; border-right: 1px solid rgba(255,255,255,0.05); }
+        .nav-item { color: #8696a0; font-size: 22px; cursor: pointer; transition: 0.3s; position: relative; width: 100%; text-align: center; }
+        .nav-item:hover, .nav-item.active { color: var(--accent); }
+        .nav-item.active::after { content: ''; position: absolute; left: 0; top: 0; height: 100%; width: 4px; background: var(--accent); box-shadow: 0 0 15px var(--accent); }
 
-        /* SIDEBAR */
-        .sidebar { background: var(--sidebar); display: flex; flex-direction: column; border-right: 1px solid #313d45; }
-        .sidebar-user-profile { padding: 16px; background: var(--panel); display: flex; align-items: center; gap: 15px; }
-        .profile-container { position: relative; }
-        .profile-container img { width: 45px; height: 45px; border-radius: 50%; object-fit: cover; }
-        .status-dot { position: absolute; bottom: 2px; right: 2px; width: 10px; height: 10px; border-radius: 50%; border: 2px solid var(--panel); background: #8696a0; }
-        .status-dot.online { background: var(--online); box-shadow: 0 0 8px var(--online); }
-
-        .list-container { flex: 1; overflow-y: auto; }
-        .contact { display: flex; align-items: center; padding: 14px 16px; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.03); transition: 0.2s; }
-        .contact:hover { background: #2a3942; }
-        .contact img { width: 48px; height: 48px; border-radius: 50%; margin-right: 15px; }
-        .contact-info { flex: 1; }
-        .contact-name { font-weight: 500; display: flex; justify-content: space-between; align-items: center; }
-
-        /* CHAT */
-        .content-area { position: relative; height: 100%; }
-        .messages { flex: 1; padding: 25px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; background: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-blend-mode: overlay; background-color: rgba(11,20,26,0.95); }
-        .msg { max-width: 65%; padding: 8px 14px; border-radius: 12px; font-size: 14.5px; position: relative; box-shadow: 0 1px 0.5px rgba(0,0,0,0.13); }
-        .msg.sent { align-self: flex-end; background: var(--msg-out); border-top-right-radius: 0; }
-        .msg.received { align-self: flex-start; background: var(--msg-in); border-top-left-radius: 0; }
-
-        /* CALL OVERLAY */
-        #call-overlay { display: none; position: absolute; inset: 0; background: radial-gradient(circle at center, #202c33, #0b141a); z-index: 1000; flex-direction: column; align-items: center; justify-content: center; }
-        #remote-video { width: 100%; height: 100%; object-fit: cover; }
-        #local-video { width: 110px; height: 150px; position: absolute; top: 30px; right: 30px; border-radius: 12px; border: 2px solid rgba(255,255,255,0.1); background: #000; }
-        .call-controls { position: absolute; bottom: 50px; display: flex; gap: 20px; }
-        .call-btn { width: 64px; height: 64px; border-radius: 50%; border: none; color: white; cursor: pointer; font-size: 24px; transition: 0.3s; }
-
-        /* UI ELEMENTS */
-        .btn-main { background: var(--main); color: white; padding: 12px 24px; border-radius: 8px; border: none; cursor: pointer; font-weight: 600; transition: 0.2s; }
-        .btn-main:hover { opacity: 0.9; transform: translateY(-1px); }
-        input[type="text"] { background: #2a3942; border: none; padding: 14px; border-radius: 10px; color: white; outline: none; }
+        /* САЙДБАР */
+        .sidebar { background: var(--sidebar); display: flex; flex-direction: column; border-right: 1px solid #222d34; }
+        .sidebar-header { padding: 20px; background: var(--panel); display: flex; align-items: center; gap: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
         
+        /* КОНТЕЙНЕР АВАТАРА СО СТАТУСОМ */
+        .avatar-wrapper { position: relative; width: 45px; height: 45px; flex-shrink: 0; }
+        .avatar-wrapper img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 1px solid rgba(255,255,255,0.1); }
+        .status-badge { 
+            position: absolute; bottom: 1px; right: 1px; width: 12px; height: 12px; 
+            border-radius: 50%; border: 2.5px solid var(--sidebar); background: #3e4a56; 
+            transition: 0.3s;
+        }
+        .status-badge.online { background: var(--online); box-shadow: 0 0 8px var(--online); }
+
+        .sidebar-title { padding: 20px 20px 10px; font-size: 12px; color: var(--accent); font-weight: 800; letter-spacing: 1.5px; text-transform: uppercase; }
+        .list-container { flex: 1; overflow-y: auto; }
+        .contact { display: flex; align-items: center; padding: 15px 20px; cursor: pointer; transition: 0.2s; border-bottom: 1px solid rgba(255,255,255,0.02); }
+        .contact:hover { background: #2a3942; }
+        .contact-name { font-weight: 600; font-size: 15px; margin-bottom: 2px; }
+
+        /* ОБЛАСТЬ ЧАТА */
+        .content-area { position: relative; height: 100%; background: #0b141a; }
+        #chat-view { display: flex; flex-direction: column; height: 100%; }
+        .chat-top-bar { padding: 10px 25px; background: var(--panel); height: 65px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        
+        .messages { 
+            flex: 1; padding: 25px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; 
+            background: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); 
+            background-blend-mode: overlay; background-color: rgba(11,20,26,0.94); 
+        }
+        
+        .msg { max-width: 65%; padding: 9px 15px; border-radius: 14px; font-size: 14.5px; line-height: 1.4; color: #fff; box-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+        .msg.sent { align-self: flex-end; background: var(--msg-out); border-bottom-right-radius: 2px; }
+        .msg.received { align-self: flex-start; background: var(--msg-in); border-bottom-left-radius: 2px; }
+
+        /* ЗВОНКИ */
+        #call-overlay { display: none; position: absolute; inset: 0; background: #000; z-index: 1000; flex-direction: column; align-items: center; justify-content: center; }
+        #remote-video { width: 100%; height: 100%; object-fit: cover; }
+        #local-video { width: 120px; height: 160px; position: absolute; top: 30px; right: 30px; border-radius: 12px; border: 2px solid var(--accent); z-index: 1001; }
+        .call-actions { position: absolute; bottom: 60px; display: flex; gap: 25px; z-index: 1002; }
+        .call-btn { width: 65px; height: 65px; border-radius: 50%; border: none; color: white; cursor: pointer; font-size: 24px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 15px rgba(0,0,0,0.4); }
+
+        /* ИНПУТ */
+        .input-area { padding: 15px 25px; background: var(--panel); display: flex; gap: 15px; align-items: center; }
+        input[type="text"] { background: #2a3942; border: none; padding: 12px 18px; border-radius: 12px; color: white; outline: none; flex: 1; font-size: 15px; }
+        .btn-send { background: var(--accent); color: white; border: none; width: 45px; height: 45px; border-radius: 12px; cursor: pointer; font-size: 18px; transition: 0.2s; }
+        .btn-send:hover { transform: scale(1.05); }
+
         #login-screen { display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: var(--bg); }
+        .login-card { text-align: center; background: var(--panel); padding: 50px; border-radius: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.3); }
     </style>
 </head>
 <body>
 
 <div id="login-screen">
-    <div style="font-size: 80px; font-weight: 800; color: var(--main); letter-spacing: -4px; margin-bottom: 20px;">RCNB</div>
-    <button class="btn-main" onclick="login()" style="border-radius: 40px; padding: 16px 45px;">Connect</button>
+    <div class="login-card">
+        <h1 style="color: var(--accent); font-size: 70px; margin: 0; letter-spacing: -3px;">RCNB</h1>
+        <p style="color: #8696a0; margin-bottom: 30px;">Элитный мессенджер</p>
+        <button onclick="login()" style="background: var(--accent); color: white; border: none; padding: 15px 40px; border-radius: 50px; font-weight: 700; cursor: pointer; font-size: 16px;">Войти через Google</button>
+    </div>
 </div>
 
 <div id="main-app">
     <div id="call-overlay">
         <video id="remote-video" autoplay playsinline></video>
         <video id="local-video" autoplay playsinline muted></video>
-        <div class="call-controls">
+        <div class="call-actions">
             <button id="btn-ans" class="call-btn" style="background:#25d366; display:none"><i class="fa fa-phone"></i></button>
             <button onclick="hangUp()" class="call-btn" style="background:#ea4335"><i class="fa fa-phone-slash"></i></button>
         </div>
     </div>
 
     <div class="nav-rail">
-        <div class="nav-item active" id="btn-chats" onclick="showView('chat')"><i class="fa-solid fa-message-middle"></i><i class="fa fa-comment"></i></div>
-        <div class="nav-item" id="btn-feed" onclick="showView('feed')"><i class="fa fa-rss"></i></div>
-        <div class="nav-item" id="btn-all" onclick="showView('all')"><i class="fa fa-users"></i></div>
-        <div class="nav-item" id="btn-settings" onclick="showView('settings')"><i class="fa fa-cog"></i></div>
-        <div class="nav-item" onclick="logout()" style="margin-top: auto; opacity: 0.5;"><i class="fa fa-sign-out-alt"></i></div>
+        <div class="nav-item active" id="n-chat" onclick="showView('chat')"><i class="fa fa-comments"></i></div>
+        <div class="nav-item" id="n-all" onclick="showView('all')"><i class="fa fa-users"></i></div>
+        <div class="nav-item" id="n-feed" onclick="showView('feed')"><i class="fa fa-rss"></i></div>
+        <div class="nav-item" id="n-set" onclick="showView('settings')"><i class="fa fa-cog"></i></div>
+        <div class="nav-item" onclick="logout()" style="margin-top: auto; opacity: 0.4;"><i class="fa fa-power-off"></i></div>
     </div>
 
     <div class="sidebar">
-        <div class="sidebar-user-profile">
-            <div class="profile-container">
-                <img id="my-profile-pic" src="">
-                <div class="status-dot online"></div>
+        <div class="sidebar-header">
+            <div class="avatar-wrapper">
+                <img id="my-pic" src="">
+                <div class="status-badge online"></div>
             </div>
-            <b id="my-profile-name">...</b>
+            <b id="my-name">Загрузка...</b>
         </div>
-        <div id="sidebar-label" style="padding: 20px 20px 10px; font-size: 13px; color: var(--main); font-weight: 700;">CHATS</div>
-        <div class="list-container" id="sidebar-list"></div>
+        <div id="sb-label" class="sidebar-title">Мои диалоги</div>
+        <div class="list-container" id="sb-list"></div>
     </div>
 
     <div class="content-area">
-        <div id="chat-view" style="display:flex; flex-direction:column; height:100%;">
-            <div style="padding: 12px 25px; background: var(--panel); height: 65px; display: flex; align-items: center; justify-content: space-between;">
-                <b id="chat-title">Select context</b>
-                <div id="call-tools" style="display:none; gap:25px; font-size: 18px;">
-                    <i class="fa fa-phone" onclick="makeCall(false)" style="color:var(--main); cursor:pointer"></i>
-                    <i class="fa fa-video" onclick="makeCall(true)" style="color:var(--main); cursor:pointer"></i>
+        <div id="chat-view">
+            <div class="chat-top-bar">
+                <b id="chat-target">Выберите чат</b>
+                <div id="call-btns" style="display:none; gap:25px;">
+                    <i class="fa fa-phone" onclick="makeCall(false)" style="color:var(--accent); cursor:pointer; font-size:20px;"></i>
+                    <i class="fa fa-video" onclick="makeCall(true)" style="color:var(--accent); cursor:pointer; font-size:20px;"></i>
                 </div>
             </div>
             <div class="messages" id="messages"></div>
-            <div style="padding: 15px 20px; background: var(--panel); display: flex; gap: 15px;">
-                <input type="text" id="msg-input" placeholder="Type a message..." style="flex:1" onkeypress="if(event.key==='Enter') sendMsg()">
-                <button onclick="sendMsg()" class="btn-main" style="width: 50px; padding: 0;"><i class="fa fa-paper-plane"></i></button>
+            <div class="input-area">
+                <input type="text" id="msg-input" placeholder="Введите сообщение..." onkeypress="if(event.key==='Enter') sendMsg()">
+                <button onclick="sendMsg()" class="btn-send"><i class="fa fa-paper-plane"></i></button>
             </div>
         </div>
 
-        <div id="feed-view" style="display:none; padding: 40px; overflow-y: auto;">
-             <div id="feed-container" style="max-width: 600px; margin: 0 auto;"></div>
+        <div id="feed-view" style="display:none; padding:40px; overflow-y:auto;">
+            <div id="feed-cont" style="max-width:600px; margin:0 auto;"></div>
         </div>
 
-        <div id="settings-view" style="display:none; padding: 60px;">
-            <div style="max-width: 450px; margin: 0 auto; background: var(--panel); padding: 40px; border-radius: 20px;">
-                <h2 style="margin-top:0">Profile Settings</h2>
-                <input type="text" id="set-name" style="width:100%; margin-bottom: 20px;" placeholder="Nickname">
-                <button class="btn-main" onclick="saveProfile()" style="width:100%">Save Changes</button>
+        <div id="settings-view" style="display:none; padding:50px;">
+            <div style="max-width:400px; background:var(--panel); padding:30px; border-radius:20px;">
+                <h2 style="margin-top:0">Настройки</h2>
+                <input type="text" id="set-name-input" placeholder="Ваше имя" style="width:100%; box-sizing:border-box;">
+                <button onclick="saveName()" class="btn-send" style="width:100%; margin-top:15px; border-radius:8px;">Сохранить</button>
             </div>
         </div>
     </div>
@@ -155,67 +174,55 @@
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('main-app').style.display = 'grid';
             
-            // Установка статуса ONLINE
-            db.collection("users").doc(user.uid).set({ 
-                name: user.displayName, 
-                photo: user.photoURL, 
-                uid: user.uid,
-                online: true,
-                lastSeen: Date.now()
-            }, {merge: true});
+            // Статус онлайн
+            const uRef = db.collection("users").doc(user.uid);
+            uRef.set({ name: user.displayName, photo: user.photoURL, uid: user.uid, online: true }, {merge:true});
+            
+            // Оффлайн при выходе
+            window.addEventListener('beforeunload', () => uRef.update({ online: false }));
 
-            // Обработка выхода/закрытия вкладки
-            db.collection("users").doc(user.uid).onSnapshot(() => {}); 
-            window.addEventListener('beforeunload', () => {
-                db.collection("users").doc(me.uid).update({ online: false, lastSeen: Date.now() });
+            uRef.onSnapshot(doc => {
+                const d = doc.data();
+                document.getElementById('my-pic').src = d.photo;
+                document.getElementById('my-name').innerText = d.name;
             });
 
-            syncUser();
             showView('chat');
-            listenInboundCalls();
+            listenCalls();
         } else {
             document.getElementById('login-screen').style.display = 'flex';
         }
     });
 
     function login() { auth.signInWithPopup(provider); }
-    function logout() { 
-        db.collection("users").doc(me.uid).update({ online: false }).then(() => {
-            auth.signOut(); location.reload();
-        });
-    }
-
-    function syncUser() {
-        db.collection("users").doc(me.uid).onSnapshot(doc => {
-            const d = doc.data();
-            document.getElementById('my-profile-pic').src = d.photo;
-            document.getElementById('my-profile-name').innerText = d.name;
-        });
-    }
+    function logout() { db.collection("users").doc(me.uid).update({online:false}).then(()=>auth.signOut()); }
 
     function showView(v) {
         ['chat-view', 'feed-view', 'settings-view'].forEach(id => document.getElementById(id).style.display = id.includes(v) ? 'flex' : 'none');
         document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
-        if(v === 'chat') { document.getElementById('btn-chats').classList.add('active'); loadSidebar('chats'); }
-        if(v === 'all') { document.getElementById('btn-all').classList.add('active'); loadSidebar('all'); }
+        document.getElementById('n-'+v.substring(0,4)).classList.add('active');
+        if(v === 'chat') loadSidebar('chats');
+        if(v === 'all') loadSidebar('all');
     }
 
     function loadSidebar(type) {
+        document.getElementById('sb-label').innerText = type === 'all' ? "Все пользователи" : "Мои диалоги";
         db.collection("users").onSnapshot(snap => {
-            const list = document.getElementById('sidebar-list');
-            list.innerHTML = "";
+            const list = document.getElementById('sb-list'); list.innerHTML = "";
             snap.forEach(doc => {
                 const u = doc.data();
                 if(u.uid !== me.uid) {
                     list.innerHTML += `
                         <div class="contact" onclick="openChat('${u.uid}', '${u.name}')">
-                            <div class="profile-container">
+                            <div class="avatar-wrapper">
                                 <img src="${u.photo}">
-                                <div class="status-dot ${u.online ? 'online' : ''}"></div>
+                                <div class="status-badge ${u.online ? 'online' : ''}"></div>
                             </div>
-                            <div class="contact-info">
+                            <div style="margin-left:15px">
                                 <div class="contact-name">${u.name}</div>
-                                <div style="font-size:12px; color:#8696a0">${u.online ? 'online' : 'last seen recently'}</div>
+                                <div style="font-size:12px; color:${u.online ? 'var(--online)' : '#8696a0'}">
+                                    ${u.online ? 'в сети' : 'был недавно'}
+                                </div>
                             </div>
                         </div>`;
                 }
@@ -225,21 +232,21 @@
 
     function openChat(uid, name) {
         activeChat = uid;
-        document.getElementById('chat-title').innerText = name;
-        document.getElementById('call-tools').style.display = 'flex';
-        loadMessages();
+        document.getElementById('chat-target').innerText = name;
+        document.getElementById('call-btns').style.display = 'flex';
+        loadMsgs();
     }
 
     function sendMsg() {
-        const input = document.getElementById('msg-input');
-        if(!input.value.trim() || !activeChat) return;
+        const i = document.getElementById('msg-input');
+        if(!i.value.trim() || !activeChat) return;
         db.collection("chats").doc([me.uid, activeChat].sort().join('_')).collection("messages").add({
-            text: input.value, sender: me.uid, time: Date.now()
+            text: i.value, sender: me.uid, time: Date.now()
         });
-        input.value = "";
+        i.value = "";
     }
 
-    function loadMessages() {
+    function loadMsgs() {
         db.collection("chats").doc([me.uid, activeChat].sort().join('_')).collection("messages").orderBy("time").onSnapshot(snap => {
             const box = document.getElementById('messages'); box.innerHTML = "";
             snap.forEach(doc => {
@@ -250,7 +257,7 @@
         });
     }
 
-    // CALL LOGIC (CLEAN)
+    // ЗВОНКИ
     async function makeCall(video) {
         document.getElementById('call-overlay').style.display = 'flex';
         localStream = await navigator.mediaDevices.getUserMedia({audio:true, video:video});
@@ -258,23 +265,21 @@
         pc = new RTCPeerConnection({iceServers:[{urls:'stun:stun.l.google.com:19302'}]});
         localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
         pc.ontrack = e => document.getElementById('remote-video').srcObject = e.streams[0];
-        
         const callDoc = db.collection('calls').doc(activeChat);
         pc.onicecandidate = e => e.candidate && callDoc.collection('offCands').add(e.candidate.toJSON());
         const offer = await pc.createOffer();
         await pc.setLocalDescription(offer);
         await callDoc.set({offer, caller:me.displayName, video});
-
         callDoc.onSnapshot(s => { const d = s.data(); if(d?.answer && !pc.currentRemoteDescription) pc.setRemoteDescription(new RTCSessionDescription(d.answer)); });
         callDoc.collection('ansCands').onSnapshot(s => s.docChanges().forEach(c => c.type==='added' && pc.addIceCandidate(new RTCIceCandidate(c.doc.data()))));
     }
 
-    function listenInboundCalls() {
+    function listenCalls() {
         db.collection('calls').doc(me.uid).onSnapshot(async s => {
             const d = s.data();
             if(d && d.offer && !pc) {
                 document.getElementById('call-overlay').style.display = 'flex';
-                document.getElementById('btn-ans').style.display = 'block';
+                document.getElementById('btn-ans').style.display = 'flex';
                 document.getElementById('btn-ans').onclick = async () => {
                     document.getElementById('btn-ans').style.display = 'none';
                     localStream = await navigator.mediaDevices.getUserMedia({audio:true, video:d.video});
@@ -302,9 +307,9 @@
         document.getElementById('call-overlay').style.display = 'none';
     }
 
-    async function saveProfile() {
-        await db.collection("users").doc(me.uid).update({ name: document.getElementById('set-name').value });
-        alert("Saved");
+    function saveName() {
+        const n = document.getElementById('set-name-input').value;
+        if(n) db.collection("users").doc(me.uid).update({name: n}).then(()=>alert("Имя обновлено"));
     }
 </script>
 </body>
