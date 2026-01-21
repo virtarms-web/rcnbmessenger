@@ -3,170 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RCNB Ultimate Messenger</title>
+    <title>WhatsApp RCNB</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #F2F2F7; color: #1C1C1E; overflow: hidden; }
-        .glass { background: rgba(255, 255, 255, 0.7); backdrop-filter: blur(20px); border-right: 1px solid #E5E5EA; }
-        .tab-content { display: none; height: 100vh; width: 100%; }
-        .tab-content.active { display: flex; animation: slideUp 0.3s ease-out; }
-        @keyframes slideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-        .sidebar-btn.active { background: #FFFFFF; color: #007AFF; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border-radius: 14px; }
-        .toast { transform: translateY(-120%); transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .toast.show { transform: translateY(20px); }
-        .chat-bubble-me { background: #007AFF; color: white; border-radius: 18px 18px 4px 18px; }
-        .chat-bubble-them { background: #E9E9EB; color: #1C1C1E; border-radius: 18px 18px 18px 4px; }
-        iframe { width: 100%; height: 100%; border: none; border-radius: 24px; }
-        .video-card { width: 100%; border-radius: 20px; background: #000; box-shadow: 0 10px 25px rgba(0,0,0,0.1); }
+        /* WhatsApp Palette 2020 */
+        :root {
+            --wa-teal: #075E54;
+            --wa-teal-light: #128C7E;
+            --wa-bg: #ECE5DD;
+            --wa-me: #DCF8C6;
+            --wa-them: #FFFFFF;
+        }
+        body { background: var(--wa-bg); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        
+        .wa-header { background: var(--wa-teal); color: white; }
+        .wa-nav-active { border-bottom: 3px solid white; opacity: 1 !important; }
+        
+        /* Стили чата */
+        .chat-container { background-image: url('https://user-images.githubusercontent.com/15075759/28719144-86dc0f70-73b1-11e7-911d-60d70fcded21.png'); background-repeat: repeat; }
+        .bubble { position: relative; padding: 8px 12px; margin-bottom: 4px; max-width: 80%; font-size: 14.5px; box-shadow: 0 1px 1px rgba(0,0,0,0.1); }
+        .bubble-me { background: var(--wa-me); align-self: flex-end; border-radius: 7.5px 0 7.5px 7.5px; }
+        .bubble-them { background: var(--wa-them); align-self: flex-start; border-radius: 0 7.5px 7.5px 7.5px; }
+
+        .tab-content { display: none; height: calc(100vh - 105px); overflow-y: auto; }
+        .tab-content.active { display: flex; flex-direction: column; }
+
+        /* Уведомление */
+        #toast { 
+            position: fixed; top: -100px; left: 50%; transform: translateX(-50%); 
+            background: #333; color: white; padding: 12px 24px; border-radius: 50px; 
+            z-index: 1000; transition: 0.5s; font-size: 14px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+        #toast.show { top: 20px; }
     </style>
 </head>
-<body>
+<body class="h-screen overflow-hidden flex flex-col">
 
-    <div id="toast" class="toast fixed top-0 left-1/2 -translate-x-1/2 z-[300] bg-white/90 backdrop-blur shadow-2xl px-6 py-4 rounded-2xl flex items-center gap-4 border border-white">
-        <div class="w-10 h-10 bg-blue-500 rounded-full flex items-center justify-center text-white shadow-lg shadow-blue-200">
-            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" stroke-width="2" stroke-linecap="round"></path></svg>
-        </div>
-        <div>
-            <p id="toast-title" class="text-[10px] font-black uppercase text-blue-600 tracking-tighter">Входящее сообщение</p>
-            <p id="toast-msg" class="text-sm font-bold">Привет!</p>
-        </div>
+    <div id="toast">Новое сообщение</div>
+
+    <div id="auth-screen" class="fixed inset-0 z-[1000] bg-white flex flex-col items-center justify-center p-6">
+        <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" class="w-20 mb-10">
+        <h1 class="text-2xl font-bold text-gray-700 mb-8">WhatsApp RCNB</h1>
+        <button id="login-btn" class="bg-[#25D366] text-white px-8 py-3 rounded-md font-bold uppercase tracking-wider shadow-lg">Войти через Google</button>
     </div>
 
-    <div id="auth-screen" class="fixed inset-0 z-[500] bg-[#F2F2F7] flex items-center justify-center p-6">
-        <div class="max-w-sm w-full bg-white p-12 rounded-[40px] shadow-2xl text-center border border-white">
-            <div class="w-20 h-20 bg-blue-600 rounded-3xl mx-auto mb-8 flex items-center justify-center text-white text-4xl font-black italic shadow-2xl shadow-blue-200">R</div>
-            <h1 class="text-3xl font-black mb-2 italic">RCNB PRIME</h1>
-            <p class="text-gray-400 text-sm mb-10">Твоя жизнь. Твой мессенджер.</p>
-            <button id="login-btn" class="w-full py-4 bg-black text-white rounded-2xl font-bold hover:scale-105 transition flex items-center justify-center gap-3">
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/pwa_guide/google.svg" class="w-5"> Войти через Google
-            </button>
-        </div>
-    </div>
-
-    <div id="app" class="hidden h-screen w-screen flex overflow-hidden">
+    <div id="app" class="hidden h-screen flex flex-col">
         
-        <nav class="w-24 lg:w-72 glass flex flex-col p-6 z-50">
-            <div class="hidden lg:block text-2xl font-black italic mb-10 text-blue-600 tracking-tighter">RCNB PRIME</div>
-            
-            <div class="flex-1 space-y-2">
-                <button onclick="setTab('chats')" class="sidebar-btn active w-full flex items-center gap-4 p-4 transition" id="btn-chats">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" stroke-width="2"></path></svg>
-                    <span class="hidden lg:block font-bold">Чаты</span>
-                </button>
-                <button onclick="setTab('users')" class="sidebar-btn w-full flex items-center gap-4 p-4 transition" id="btn-users">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" stroke-width="2"></path></svg>
-                    <span class="hidden lg:block font-bold">Люди</span>
-                </button>
-                <button onclick="setTab('feed')" class="sidebar-btn w-full flex items-center gap-4 p-4 transition" id="btn-feed">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" stroke-width="2"></path></svg>
-                    <span class="hidden lg:block font-bold">Лента</span>
-                </button>
-                <button onclick="setTab('lessons')" class="sidebar-btn w-full flex items-center gap-4 p-4 transition" id="btn-lessons">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" stroke-width="2"></path></svg>
-                    <span class="hidden lg:block font-bold">Уроки</span>
-                </button>
-                <button onclick="setTab('gdz')" class="sidebar-btn w-full flex items-center gap-4 p-4 transition" id="btn-gdz">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" stroke-width="2"></path></svg>
-                    <span class="hidden lg:block font-bold">ГДЗ</span>
-                </button>
-            </div>
-
-            <div class="mt-auto pt-6 border-t border-gray-100 flex items-center gap-3">
-                <img id="my-avatar" class="w-10 h-10 rounded-full border-2 border-white shadow-md cursor-pointer" onclick="setTab('profile')">
-                <div class="hidden lg:block truncate">
-                    <p id="my-name" class="font-bold text-xs truncate"></p>
-                    <button onclick="auth.signOut()" class="text-[10px] text-red-500 font-bold uppercase tracking-widest hover:underline">Выход</button>
+        <header class="wa-header pt-4 px-4 flex flex-col shadow-md">
+            <div class="flex justify-between items-center mb-4">
+                <span class="text-xl font-bold opacity-90">WhatsApp RCNB</span>
+                <div class="flex gap-4 items-center">
+                    <button onclick="auth.signOut()" class="text-sm opacity-80 uppercase font-bold">Выйти</button>
+                    <img id="my-avatar" class="w-8 h-8 rounded-full border border-white/20">
                 </div>
             </div>
-        </nav>
+            <div class="flex text-sm font-bold uppercase tracking-wide">
+                <button onclick="setTab('chats')" id="tab-btn-chats" class="flex-1 py-3 opacity-60 wa-nav-active">Чаты</button>
+                <button onclick="setTab('users')" id="tab-btn-users" class="flex-1 py-3 opacity-60">Люди</button>
+                <button onclick="setTab('feed')" id="tab-btn-feed" class="flex-1 py-3 opacity-60">Лента</button>
+                <button onclick="setTab('lessons')" id="tab-btn-lessons" class="flex-1 py-3 opacity-60">Уроки</button>
+                <button onclick="setTab('gdz')" id="tab-btn-gdz" class="flex-1 py-3 opacity-60">ГДЗ</button>
+            </div>
+        </header>
 
-        <main class="flex-1 flex relative">
+        <main class="flex-1 overflow-hidden relative">
             
-            <section id="tab-chats" class="tab-content active flex-row">
-                <div class="w-80 border-r border-gray-200 bg-white/30 flex flex-col">
-                    <div class="p-8"><h2 class="text-2xl font-black">Друзья</h2></div>
-                    <div id="friends-list" class="flex-1 overflow-y-auto px-4 space-y-2"></div>
-                </div>
-                <div class="flex-1 flex flex-col bg-white">
-                    <div id="chat-empty" class="flex-1 flex flex-col items-center justify-center text-gray-300">
-                        <svg class="w-20 h-20 mb-4 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" stroke-width="2"></path></svg>
-                        <p class="font-bold">Выбери друга, чтобы начать флекс</p>
+            <section id="tab-chats" class="tab-content active bg-white">
+                <div id="friends-list" class="flex-1">
                     </div>
-                    <div id="chat-active" class="hidden h-full flex flex-col">
-                        <header class="h-20 px-10 border-b border-gray-100 flex items-center gap-4 bg-white/80 backdrop-blur">
-                            <img id="active-chat-avatar" class="w-10 h-10 rounded-full object-cover">
-                            <h3 id="active-chat-name" class="font-black">Имя</h3>
-                        </header>
-                        <div id="messages-container" class="flex-1 overflow-y-auto p-10 space-y-4"></div>
-                        <form id="chat-form" class="p-8 flex gap-4 bg-white">
-                            <input id="chat-input" type="text" placeholder="Напиши что-нибудь..." class="flex-1 h-14 px-8 bg-gray-100 border-none rounded-2xl outline-none focus:ring-2 focus:ring-blue-100 transition">
-                            <button class="w-14 h-14 bg-blue-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-blue-200"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 5l7 7m0 0l-7 7m7-7H3" stroke-width="2"></path></svg></button>
-                        </form>
-                    </div>
+                <div id="chat-window" class="hidden fixed inset-0 z-50 bg-[#E5DDD5] flex flex-col">
+                    <header class="wa-header h-16 px-4 flex items-center gap-3">
+                        <button onclick="closeChat()" class="text-white text-xl">←</button>
+                        <img id="active-avatar" class="w-10 h-10 rounded-full">
+                        <span id="active-name" class="font-bold">Имя</span>
+                    </header>
+                    <div id="messages-box" class="flex-1 p-4 overflow-y-auto chat-container flex flex-col"></div>
+                    <form id="chat-form" class="p-2 flex gap-2 items-center bg-[#F0F0F0]">
+                        <input id="chat-input" placeholder="Введите сообщение" class="flex-1 rounded-full py-3 px-5 outline-none text-sm">
+                        <button class="bg-[#075E54] text-white w-12 h-12 rounded-full flex items-center justify-center shadow-md">➤</button>
+                    </form>
                 </div>
             </section>
 
-            <section id="tab-users" class="tab-content flex-col p-12 overflow-y-auto">
-                <h2 class="text-4xl font-black mb-12 italic">Комьюнити</h2>
-                <div id="all-users-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12"></div>
-                <h2 class="text-4xl font-black mb-8 text-blue-600">Запросы</h2>
-                <div id="requests-list" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+            <section id="tab-users" class="tab-content bg-white p-4">
+                <h3 class="text-[#075E54] font-bold mb-4 uppercase text-xs">Все пользователи</h3>
+                <div id="users-list" class="space-y-4"></div>
+                <h3 class="text-orange-600 font-bold mt-8 mb-4 uppercase text-xs">Запросы</h3>
+                <div id="req-list" class="space-y-4"></div>
             </section>
 
-            <section id="tab-feed" class="tab-content flex-col overflow-y-auto p-12">
-                <div class="max-w-xl mx-auto w-full">
-                    <div class="bg-white p-8 rounded-[32px] shadow-sm mb-12 border border-white">
-                        <textarea id="feed-text" placeholder="Что в голове?" class="w-full bg-transparent border-none text-xl outline-none resize-none mb-6" rows="2"></textarea>
-                        <div class="flex justify-between items-center border-t pt-6">
-                            <input type="file" id="feed-file" accept="video/*" class="hidden" onchange="window.selectedFile = this.files[0]">
-                            <button onclick="document.getElementById('feed-file').click()" class="flex items-center gap-2 text-gray-400 font-bold hover:text-blue-600 transition">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" stroke-width="2"></path></svg>
-                                Видео
-                            </button>
-                            <button id="post-btn" class="bg-blue-600 text-white px-10 py-3 rounded-2xl font-black shadow-lg shadow-blue-100">POST</button>
-                        </div>
-                        <div id="upload-bar" class="hidden mt-4 h-1.5 bg-gray-100 rounded-full overflow-hidden">
-                            <div id="progress" class="h-full bg-blue-600 w-0 transition-all"></div>
-                        </div>
+            <section id="tab-feed" class="tab-content">
+                <div class="p-4 bg-white shadow-sm mb-2">
+                    <textarea id="feed-text" placeholder="Текст поста..." class="w-full text-sm outline-none resize-none"></textarea>
+                    <div class="flex justify-between items-center mt-2">
+                        <input type="file" id="feed-file" accept="video/*" class="hidden">
+                        <button onclick="document.getElementById('feed-file').click()" class="text-[#128C7E] text-xs font-bold uppercase">Прикрепить видео</button>
+                        <button id="post-btn" class="bg-[#25D366] text-white px-4 py-1.5 rounded text-xs font-bold">ОПУБЛИКОВАТЬ</button>
                     </div>
-                    <div id="feed-items" class="space-y-10"></div>
+                    <div id="up-bar" class="hidden h-1 bg-green-500 mt-2 transition-all w-0"></div>
                 </div>
+                <div id="feed-items" class="space-y-2"></div>
             </section>
 
-            <section id="tab-lessons" class="tab-content flex-col p-12 overflow-y-auto">
-                <div class="max-w-4xl mx-auto w-full">
-                    <div class="flex justify-between items-center mb-12">
-                        <h2 class="text-4xl font-black italic tracking-tighter">Школьный портал</h2>
-                        <button onclick="exportToExcel()" class="bg-green-500 text-white px-8 py-3 rounded-2xl font-bold shadow-lg shadow-green-100">Скачать Excel</button>
-                    </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-10">
-                        <div class="bg-white p-8 rounded-[40px] shadow-sm">
-                            <h3 class="text-xl font-black mb-6">Расписание</h3>
-                            <div id="sch-list" class="space-y-3 mb-6"></div>
-                            <div class="flex gap-2 bg-gray-50 p-2 rounded-2xl">
-                                <input id="s-name" placeholder="Предмет" class="bg-transparent p-2 flex-1 outline-none text-sm">
-                                <input id="s-time" type="time" class="bg-transparent p-2 outline-none text-sm">
-                                <button onclick="addS()" class="bg-black text-white px-4 rounded-xl font-bold">+</button>
-                            </div>
+            <section id="tab-lessons" class="tab-content p-4">
+                <div class="bg-white p-4 rounded shadow-sm mb-4">
+                    <button onclick="exportToExcel()" class="w-full bg-[#075E54] text-white py-2 rounded text-xs font-bold mb-4">СКАЧАТЬ EXCEL ОТЧЕТ</button>
+                    <div class="space-y-4">
+                        <div>
+                            <h4 class="font-bold text-xs mb-2">РАСПИСАНИЕ</h4>
+                            <div id="sch-view" class="space-y-1 mb-2"></div>
+                            <div class="flex gap-1"><input id="s-n" placeholder="Предмет" class="border p-1 text-xs flex-1"><input id="s-t" type="time" class="border p-1 text-xs"><button onclick="addS()" class="bg-[#128C7E] text-white px-2">+</button></div>
                         </div>
-                        <div class="bg-white p-8 rounded-[40px] shadow-sm">
-                            <h3 class="text-xl font-black mb-6">Оценки</h3>
-                            <div id="g-list" class="space-y-3 mb-6"></div>
-                            <div class="flex gap-2 bg-gray-50 p-2 rounded-2xl">
-                                <input id="g-name" placeholder="Предмет" class="bg-transparent p-2 flex-1 outline-none text-sm">
-                                <input id="g-val" type="number" placeholder="5" class="bg-transparent p-2 w-16 outline-none text-sm">
-                                <button onclick="addG()" class="bg-orange-500 text-white px-4 rounded-xl font-bold">+</button>
-                            </div>
+                        <div>
+                            <h4 class="font-bold text-xs mb-2">ОЦЕНКИ</h4>
+                            <div id="g-view" class="space-y-1 mb-2"></div>
+                            <div class="flex gap-1"><input id="g-n" placeholder="Предмет" class="border p-1 text-xs flex-1"><input id="g-v" type="number" class="border p-1 text-xs w-12"><button onclick="addG()" class="bg-orange-500 text-white px-2">+</button></div>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <section id="tab-gdz" class="tab-content p-8">
-                <div class="flex-1 bg-white rounded-[40px] shadow-2xl overflow-hidden p-2 border border-white">
-                    <iframe src="https://gdz.ru"></iframe>
-                </div>
+            <section id="tab-gdz" class="tab-content h-full">
+                <iframe src="https://gdz.ru"></iframe>
             </section>
 
         </main>
@@ -197,42 +155,45 @@
         let activeFriendId = null;
         let schoolData = { schedule: [], grades: [] };
 
-        // AUTH & INIT
+        // --- AUTH ---
         document.getElementById('login-btn').onclick = () => signInWithPopup(auth, provider);
         onAuthStateChanged(auth, async (user) => {
             if (user) {
                 document.getElementById('auth-screen').classList.add('hidden');
                 document.getElementById('app').classList.remove('hidden');
                 document.getElementById('my-avatar').src = user.photoURL;
-                document.getElementById('my-name').innerText = user.displayName;
-                
                 await setDoc(doc(db, 'users', user.uid), { uid: user.uid, name: user.displayName, photo: user.photoURL }, { merge: true });
-                
-                initUsers();
-                initFriends();
-                initFeed();
-                listenNotifications();
+                initAll();
+            } else {
+                document.getElementById('auth-screen').classList.remove('hidden');
             }
         });
 
-        // TABS
-        window.setTab = (tab) => {
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            document.querySelectorAll('.sidebar-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(`tab-${tab}`).classList.add('active');
-            document.getElementById(`btn-${tab}`).classList.add('active');
-        };
-
-        // NOTIFICATIONS
-        function toast(msg) {
-            document.getElementById('toast-msg').innerText = msg;
-            const t = document.getElementById('toast');
-            t.classList.add('show');
-            notifySound.play();
-            setTimeout(() => t.classList.remove('show'), 4000);
+        function initAll() {
+            loadUsers();
+            loadFriends();
+            loadFeed();
+            listenGlobal();
         }
 
-        function listenNotifications() {
+        // --- TABS ---
+        window.setTab = (tab) => {
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.querySelectorAll('header button').forEach(b => b.classList.remove('wa-nav-active'));
+            document.getElementById(`tab-${tab}`).classList.add('active');
+            document.getElementById(`tab-btn-${tab}`).classList.add('wa-nav-active');
+        };
+
+        // --- NOTIFICATIONS (5 SECONDS) ---
+        function toast(msg) {
+            const t = document.getElementById('toast');
+            t.innerText = msg;
+            t.classList.add('show');
+            notifySound.play();
+            setTimeout(() => t.classList.remove('show'), 5000); // Ровно 5 секунд
+        }
+
+        function listenGlobal() {
             const q = query(collection(db, "global_messages"), orderBy("createdAt", "desc"));
             let init = true;
             onSnapshot(q, (snap) => {
@@ -244,51 +205,36 @@
             });
         }
 
-        // --- FRIENDS & MESSAGES ---
-        async function initUsers() {
+        // --- FRIENDS & DMs ---
+        async function loadUsers() {
             const snap = await getDocs(collection(db, "users"));
-            const list = document.getElementById('all-users-list');
-            list.innerHTML = '';
+            const list = document.getElementById('users-list'); list.innerHTML = '';
             snap.forEach(d => {
-                const u = d.data();
-                if(u.uid === auth.currentUser.uid) return;
-                list.innerHTML += `
-                    <div class="bg-white p-6 rounded-[30px] shadow-sm flex items-center justify-between border border-white">
-                        <div class="flex items-center gap-3"><img src="${u.photo}" class="w-10 h-10 rounded-full"> <p class="font-bold text-sm">${u.name}</p></div>
-                        <button onclick="sendReq('${u.uid}')" class="text-blue-600 font-black text-xs uppercase tracking-widest">Add</button>
-                    </div>`;
+                const u = d.data(); if(u.uid === auth.currentUser.uid) return;
+                list.innerHTML += `<div class="flex items-center justify-between"><div class="flex items-center gap-3"><img src="${u.photo}" class="w-10 h-10 rounded-full"><span class="text-sm font-bold">${u.name}</span></div><button onclick="sendReq('${u.uid}')" class="text-xs text-[#128C7E] font-bold">ДОБАВИТЬ</button></div>`;
             });
             onSnapshot(query(collection(db, "friendRequests"), where("to", "==", auth.currentUser.uid)), (snap) => {
-                const reqList = document.getElementById('requests-list');
-                reqList.innerHTML = '';
-                snap.forEach(d => {
-                    const r = d.data();
-                    reqList.innerHTML += `<div class="bg-blue-600 p-6 rounded-[30px] text-white flex items-center justify-between">
-                        <p class="font-bold text-sm">${r.fromName}</p>
-                        <button onclick="acceptReq('${d.id}', '${r.from}')" class="bg-white text-blue-600 px-4 py-2 rounded-xl text-xs font-black">ACCEPT</button>
-                    </div>`;
-                });
+                const rl = document.getElementById('req-list'); rl.innerHTML = '';
+                snap.forEach(d => { rl.innerHTML += `<div class="flex items-center justify-between text-xs p-2 bg-orange-50 font-bold"><span>${d.data().fromName}</span><button onclick="acceptReq('${d.id}', '${d.data().from}')" class="text-green-600">ПРИНЯТЬ</button></div>`; });
             });
         }
 
-        window.sendReq = async (id) => { await addDoc(collection(db, "friendRequests"), { from: auth.currentUser.uid, fromName: auth.currentUser.displayName, to: id }); alert("Sent!"); };
+        window.sendReq = async (id) => { await addDoc(collection(db, "friendRequests"), { from: auth.currentUser.uid, fromName: auth.currentUser.displayName, to: id }); alert("Запрос отправлен"); };
         window.acceptReq = async (rid, fid) => {
             await setDoc(doc(db, `users/${auth.currentUser.uid}/friends`, fid), { uid: fid });
             await setDoc(doc(db, `users/${fid}/friends`, auth.currentUser.uid), { uid: auth.currentUser.uid });
-            await deleteDoc(doc(db, "friendRequests", rid));
-            location.reload();
+            await deleteDoc(doc(db, "friendRequests", rid)); location.reload();
         };
 
-        function initFriends() {
+        function loadFriends() {
             onSnapshot(collection(db, `users/${auth.currentUser.uid}/friends`), (snap) => {
-                const list = document.getElementById('friends-list');
-                list.innerHTML = '';
+                const fl = document.getElementById('friends-list'); fl.innerHTML = '';
                 snap.forEach(async d => {
                     const u = (await getDocs(query(collection(db, "users"), where("uid", "==", d.id)))).docs[0].data();
-                    list.innerHTML += `
-                        <div onclick="openChat('${u.uid}', '${u.name}', '${u.photo}')" class="p-4 bg-white rounded-2xl shadow-sm flex items-center gap-4 cursor-pointer hover:ring-2 ring-blue-500 transition">
-                            <img src="${u.photo}" class="w-12 h-12 rounded-full border-2 border-white">
-                            <p class="font-black text-sm">${u.name}</p>
+                    fl.innerHTML += `
+                        <div onclick="openChat('${u.uid}', '${u.name}', '${u.photo}')" class="flex items-center gap-4 p-4 border-b border-gray-100 bg-white active:bg-gray-100">
+                            <img src="${u.photo}" class="w-12 h-12 rounded-full">
+                            <div class="flex-1 border-none"><p class="font-bold text-gray-800">${u.name}</p><p class="text-xs text-gray-400">Нажмите, чтобы написать</p></div>
                         </div>`;
                 });
             });
@@ -296,80 +242,71 @@
 
         window.openChat = (uid, name, photo) => {
             activeFriendId = uid;
-            document.getElementById('chat-empty').classList.add('hidden');
-            document.getElementById('chat-active').classList.remove('hidden');
-            document.getElementById('active-chat-name').innerText = name;
-            document.getElementById('active-chat-avatar').src = photo;
+            document.getElementById('chat-window').classList.remove('hidden');
+            document.getElementById('active-name').innerText = name;
+            document.getElementById('active-avatar').src = photo;
             
-            const chatId = [auth.currentUser.uid, uid].sort().join('_');
-            onSnapshot(query(collection(db, `chats/${chatId}/messages`), orderBy("createdAt", "asc")), (snap) => {
-                const container = document.getElementById('messages-container');
-                container.innerHTML = '';
+            const cid = [auth.currentUser.uid, uid].sort().join('_');
+            onSnapshot(query(collection(db, `chats/${cid}/messages`), orderBy("createdAt", "asc")), (snap) => {
+                const mb = document.getElementById('messages-box'); mb.innerHTML = '';
                 snap.forEach(d => {
-                    const m = d.data();
-                    const isMe = m.uid === auth.currentUser.uid;
-                    container.innerHTML += `<div class="flex ${isMe ? 'justify-end' : 'justify-start'}"><div class="${isMe ? 'chat-bubble-me' : 'chat-bubble-them'} p-4 px-6 text-sm font-semibold">${m.text}</div></div>`;
+                    const m = d.data(); const isMe = m.uid === auth.currentUser.uid;
+                    mb.innerHTML += `<div class="bubble ${isMe ? 'bubble-me' : 'bubble-them'}">${m.text}</div>`;
                 });
-                container.scrollTo(0, container.scrollHeight);
+                mb.scrollTo(0, mb.scrollHeight);
             });
         };
+        window.closeChat = () => document.getElementById('chat-window').classList.add('hidden');
 
         document.getElementById('chat-form').onsubmit = async (e) => {
-            e.preventDefault();
-            const input = document.getElementById('chat-input');
-            if(!input.value.trim() || !activeFriendId) return;
-            const chatId = [auth.currentUser.uid, activeFriendId].sort().join('_');
-            await addDoc(collection(db, `chats/${chatId}/messages`), { text: input.value, uid: auth.currentUser.uid, createdAt: serverTimestamp() });
-            await addDoc(collection(db, "global_messages"), { text: input.value, uid: auth.currentUser.uid, name: auth.currentUser.displayName, createdAt: serverTimestamp() });
-            input.value = '';
+            e.preventDefault(); const i = document.getElementById('chat-input');
+            if(!i.value.trim() || !activeFriendId) return;
+            const cid = [auth.currentUser.uid, activeFriendId].sort().join('_');
+            await addDoc(collection(db, `chats/${cid}/messages`), { text: i.value, uid: auth.currentUser.uid, createdAt: serverTimestamp() });
+            await addDoc(collection(db, "global_messages"), { text: i.value, uid: auth.currentUser.uid, name: auth.currentUser.displayName, createdAt: serverTimestamp() });
+            i.value = '';
         };
 
         // --- FEED ---
         document.getElementById('post-btn').onclick = async () => {
-            const file = window.selectedFile;
-            const text = document.getElementById('feed-text').value;
+            const f = document.getElementById('feed-file').files[0]; const t = document.getElementById('feed-text').value;
             let url = null;
-            if(file) {
-                document.getElementById('upload-bar').classList.remove('hidden');
-                const sRef = ref(storage, `videos/${Date.now()}`);
-                const task = uploadBytesResumable(sRef, file);
-                task.on('state_changed', (s) => document.getElementById('progress').style.width = (s.bytesTransferred/s.totalBytes*100)+'%', null, async () => {
+            if(f) {
+                const r = ref(storage, `v/${Date.now()}`); const task = uploadBytesResumable(r, f);
+                task.on('state_changed', (s) => {
+                    document.getElementById('up-bar').classList.remove('hidden');
+                    document.getElementById('up-bar').style.width = (s.bytesTransferred/s.totalBytes*100)+'%';
+                }, null, async () => {
                     url = await getDownloadURL(task.snapshot.ref);
-                    await addDoc(collection(db, "posts"), { content: text, video: url, userPhoto: auth.currentUser.photoURL, userName: auth.currentUser.displayName, createdAt: serverTimestamp() });
-                    document.getElementById('upload-bar').classList.add('hidden');
-                    document.getElementById('feed-text').value = '';
+                    await addDoc(collection(db, "posts"), { content: t, video: url, photo: auth.currentUser.photoURL, name: auth.currentUser.displayName, createdAt: serverTimestamp() });
+                    document.getElementById('up-bar').classList.add('hidden');
                 });
-            } else if(text) {
-                await addDoc(collection(db, "posts"), { content: text, video: null, userPhoto: auth.currentUser.photoURL, userName: auth.currentUser.displayName, createdAt: serverTimestamp() });
-                document.getElementById('feed-text').value = '';
+            } else {
+                await addDoc(collection(db, "posts"), { content: t, video: null, photo: auth.currentUser.photoURL, name: auth.currentUser.displayName, createdAt: serverTimestamp() });
             }
+            document.getElementById('feed-text').value = '';
         };
 
-        function initFeed() {
+        function loadFeed() {
             onSnapshot(query(collection(db, "posts"), orderBy("createdAt", "desc")), (snap) => {
-                const container = document.getElementById('feed-items'); container.innerHTML = '';
+                const fi = document.getElementById('feed-items'); fi.innerHTML = '';
                 snap.forEach(d => {
                     const p = d.data();
-                    container.innerHTML += `
-                        <div class="bg-white p-8 rounded-[40px] shadow-sm border border-white">
-                            <div class="flex items-center gap-4 mb-6"><img src="${p.userPhoto}" class="w-10 h-10 rounded-full"><p class="font-black italic text-sm">${p.userName}</p></div>
-                            <p class="text-xl font-medium mb-6 leading-relaxed">${p.content}</p>
-                            ${p.video ? `<video src="${p.video}" controls class="video-card"></video>` : ''}
-                        </div>`;
+                    fi.innerHTML += `<div class="bg-white p-4 shadow-sm border-b"><div class="flex items-center gap-2 mb-2"><img src="${p.photo}" class="w-6 h-6 rounded-full"><span class="text-xs font-bold">${p.name}</span></div><p class="text-sm mb-2">${p.content}</p>${p.video ? `<video src="${p.video}" controls class="w-full rounded"></video>` : ''}</div>`;
                 });
             });
         }
 
-        // --- SCHOOL ---
-        window.addS = () => { const n = document.getElementById('s-name').value, t = document.getElementById('s-time').value; schoolData.schedule.push({n,t}); renderS(); };
-        window.addG = () => { const n = document.getElementById('g-name').value, v = document.getElementById('g-val').value; schoolData.grades.push({n,v}); renderS(); };
-        function renderS() {
-            document.getElementById('sch-list').innerHTML = schoolData.schedule.map(i => `<div class="flex justify-between font-bold text-sm bg-gray-50 p-3 rounded-xl"><span>${i.n}</span><span class="text-blue-600">${i.time}</span></div>`).join('');
-            document.getElementById('g-list').innerHTML = schoolData.grades.map(i => `<div class="flex justify-between items-center bg-gray-50 p-3 rounded-xl"><span class="text-xs font-black uppercase">${i.n}</span><span class="bg-white px-3 py-1 rounded-lg font-black text-orange-600 shadow-sm">${i.v}</span></div>`).join('');
+        // --- LESSONS ---
+        window.addS = () => { schoolData.schedule.push({n:document.getElementById('s-n').value, t:document.getElementById('s-t').value}); renderL(); };
+        window.addG = () => { schoolData.grades.push({n:document.getElementById('g-n').value, v:document.getElementById('g-v').value}); renderL(); };
+        function renderL() {
+            document.getElementById('sch-view').innerHTML = schoolData.schedule.map(i => `<div class="text-[10px] bg-gray-100 p-1 flex justify-between"><span>${i.n}</span><span>${i.t}</span></div>`).join('');
+            document.getElementById('g-view').innerHTML = schoolData.grades.map(i => `<div class="text-[10px] bg-gray-100 p-1 flex justify-between"><span>${i.n}</span><span class="font-bold text-green-700">${i.v}</span></div>`).join('');
         }
         window.exportToExcel = () => {
             let csv = "Subject,Grade\n" + schoolData.grades.map(g => `${g.n},${g.v}`).join("\n");
-            const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); a.download = 'school_report.csv'; a.click();
+            const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'})); a.download = 'report.csv'; a.click();
         };
 
     </script>
