@@ -2,213 +2,286 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>RCNB OFFICIAL | VOICE FIX</title>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RCNB ULTIMATE MESSENGER</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root { --bg: #0e1621; --side: #17212b; --accent: #24a1de; --online: #4cc351; --msg-my: #2b5278; --msg-his: #182533; }
-        body, html { height: 100%; margin: 0; font-family: 'Segoe UI', Roboto; background: var(--bg); color: #fff; overflow: hidden; }
-        #app { display: none; height: 100vh; grid-template-columns: 320px 1fr; }
-        .sidebar { background: var(--side); border-right: 1px solid #000; display: flex; flex-direction: column; }
-        .user-item { display: flex; align-items: center; padding: 12px; cursor: pointer; border-bottom: 1px solid rgba(0,0,0,0.1); }
-        .user-item:hover { background: #202b36; }
-        .avatar { position: relative; width: 45px; height: 45px; margin-right: 12px; }
-        .avatar img { width: 100%; height: 100%; border-radius: 50%; }
-        .dot { position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; border-radius: 50%; border: 2px solid var(--side); background: #555; }
-        .dot.on { background: var(--online); box-shadow: 0 0 10px var(--online); }
-        .chat { display: flex; flex-direction: column; position: relative; }
-        .chat-header { height: 60px; background: var(--side); display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid #000; }
-        .messages { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; background: #0e1621; }
-        .msg { max-width: 70%; padding: 8px 14px; border-radius: 12px; font-size: 15px; }
-        .msg.my { align-self: flex-end; background: var(--msg-my); }
-        .msg.his { align-self: flex-start; background: var(--msg-his); }
-        .input-area { padding: 15px; background: var(--side); display: flex; gap: 10px; }
-        input { flex: 1; background: #242f3d; border: none; padding: 10px 15px; border-radius: 8px; color: #fff; outline: none; }
-        
-        /* CALL UI 2018 ELITE */
-        #call-ui { display: none; position: fixed; inset: 0; background: #000; z-index: 9999; flex-direction: column; align-items: center; justify-content: center; }
-        #remote-video { width: 100%; height: 100%; object-fit: cover; }
-        #local-video { width: 120px; position: absolute; top: 20px; right: 20px; border-radius: 10px; border: 1px solid var(--accent); }
-        .call-info { position: absolute; top: 15%; text-align: center; z-index: 10; }
-        .call-btns { position: absolute; bottom: 10%; display: flex; gap: 40px; z-index: 10; }
-        .c-btn { width: 65px; height: 65px; border-radius: 50%; border: none; color: #fff; font-size: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s; }
-        #login { display: flex; height: 100vh; align-items: center; justify-content: center; }
+        :root { --bg: #09090b; --accent: #8b5cf6; }
+        body { background-color: var(--bg); color: #fff; font-family: 'Inter', sans-serif; overflow: hidden; }
+        .glass { background: rgba(24, 24, 27, 0.7); backdrop-filter: blur(10px); }
+        .tab-content { display: none; height: 100%; }
+        .tab-content.active { display: flex; flex-direction: column; }
+        .video-post { max-height: 400px; width: 100%; border-radius: 12px; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 10px; }
     </style>
 </head>
-<body>
+<body class="h-screen flex items-center justify-center">
 
-<div id="login"><button onclick="login()" style="padding:15px 40px; border-radius:10px; background:var(--accent); color:#fff; border:none; cursor:pointer; font-weight:bold;">ВОЙТИ В RCNB</button></div>
-
-<div id="app">
-    <div class="sidebar">
-        <div style="padding:15px; font-weight:bold; border-bottom:1px solid #000;">RCNB OFFICIAL</div>
-        <div id="u-list"></div>
-    </div>
-    <div class="chat">
-        <div class="chat-header">
-            <b id="chat-with">Чат не выбран</b>
-            <div id="call-box" style="display:none; margin-left:auto; gap:20px;">
-                <i class="fa fa-phone" onclick="startCall(false)" style="color:var(--accent); cursor:pointer"></i>
-                <i class="fa fa-video" onclick="startCall(true)" style="color:var(--accent); cursor:pointer"></i>
-            </div>
+    <div id="auth-screen" class="fixed inset-0 z-50 flex items-center justify-center bg-black">
+        <div class="text-center p-10 border border-zinc-800 rounded-3xl bg-zinc-900 shadow-2xl">
+            <h1 class="text-4xl font-black italic mb-2 tracking-tighter bg-gradient-to-r from-purple-400 to-pink-600 bg-clip-text text-transparent">RCNB MESSENGER</h1>
+            <p class="text-zinc-500 mb-8 uppercase text-xs tracking-widest font-bold">No Limits. No Rules.</p>
+            <button id="btn-login" class="flex items-center gap-3 bg-white text-black px-8 py-3 rounded-full font-bold hover:scale-105 transition active:scale-95">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/pwa_guide/google.svg" class="w-5">
+                Login with Google
+            </button>
         </div>
-        <div class="messages" id="msgs"></div>
-        <div class="input-area"><input type="text" id="m-in" placeholder="Сообщение..." onkeypress="if(event.key==='Enter') send()"></div>
     </div>
-</div>
 
-<div id="call-ui">
-    <div class="call-info">
-        <img id="call-img" src="" style="width:120px; height:120px; border-radius:50%; margin-bottom:15px;">
-        <h2 id="call-name">Имя</h2>
-        <p id="call-status">Вызов...</p>
+    <div id="main-app" class="hidden w-full h-full flex overflow-hidden">
+        
+        <aside class="w-20 lg:w-72 border-r border-zinc-800 flex flex-col glass z-20">
+            <div class="p-6 text-2xl font-black italic tracking-tighter hidden lg:block">RCNB.</div>
+            <nav class="flex-1 p-4 space-y-2">
+                <button onclick="showTab('chat')" class="nav-btn w-full flex items-center gap-4 p-4 rounded-2xl hover:bg-zinc-800 text-purple-400" data-tab="chat">
+                    <i class="fas fa-comment-dots text-xl"></i> <span class="hidden lg:block font-bold">Messenger</span>
+                </button>
+                <button onclick="showTab('feed')" class="nav-btn w-full flex items-center gap-4 p-4 rounded-2xl hover:bg-zinc-800" data-tab="feed">
+                    <i class="fas fa-stream text-xl"></i> <span class="hidden lg:block font-bold">Social Feed</span>
+                </button>
+                <button onclick="showTab('profile')" class="nav-btn w-full flex items-center gap-4 p-4 rounded-2xl hover:bg-zinc-800" data-tab="profile">
+                    <i class="fas fa-user-ninja text-xl"></i> <span class="hidden lg:block font-bold">My Profile</span>
+                </button>
+            </nav>
+            <div class="p-4 border-t border-zinc-800 flex items-center gap-3">
+                <img id="my-avatar" class="w-10 h-10 rounded-full border border-purple-500 shadow-lg shadow-purple-500/20">
+                <div class="hidden lg:block truncate">
+                    <p id="my-name" class="font-bold text-sm truncate"></p>
+                    <p id="my-status-display" class="text-[10px] text-green-500 uppercase font-black tracking-tighter">Online</p>
+                </div>
+            </div>
+        </aside>
+
+        <section class="flex-1 relative flex flex-col bg-zinc-950">
+            
+            <div id="tab-chat" class="tab-content active">
+                <header class="h-16 border-b border-zinc-900 flex items-center justify-between px-6 glass">
+                    <span class="font-black text-sm uppercase tracking-widest">Main Lobby</span>
+                    <div class="flex gap-4 text-zinc-400">
+                        <button class="hover:text-white transition"><i class="fas fa-phone"></i></button>
+                        <button class="hover:text-white transition"><i class="fas fa-video"></i></button>
+                    </div>
+                </header>
+                <div id="chat-messages" class="flex-1 overflow-y-auto p-6 space-y-4 custom-scroll"></div>
+                <form id="chat-form" class="p-4 bg-zinc-900/50 flex gap-2">
+                    <input type="text" id="chat-input" placeholder="Type a message..." class="flex-1 bg-zinc-800 border-none rounded-2xl px-6 py-4 focus:ring-2 focus:ring-purple-600 outline-none">
+                    <button class="bg-purple-600 w-14 rounded-2xl flex items-center justify-center hover:bg-purple-500 shadow-lg shadow-purple-600/20">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
+            </div>
+
+            <div id="tab-feed" class="tab-content overflow-y-auto custom-scroll">
+                <div class="max-w-2xl mx-auto w-full p-6 space-y-8">
+                    <div class="bg-zinc-900 p-6 rounded-3xl border border-zinc-800 shadow-xl">
+                        <textarea id="feed-text" class="w-full bg-transparent border-none focus:ring-0 resize-none text-xl" placeholder="Что происходит?"></textarea>
+                        <div class="flex justify-between items-center mt-4 border-t border-zinc-800 pt-4">
+                            <label class="cursor-pointer text-zinc-400 hover:text-purple-400 transition flex items-center gap-2">
+                                <i class="fas fa-video"></i> <span class="text-xs font-bold uppercase">Video</span>
+                                <input type="file" id="feed-file" accept="video/*,image/*" class="hidden">
+                            </label>
+                            <button id="btn-post" class="bg-white text-black px-6 py-2 rounded-full font-black text-sm uppercase hover:bg-purple-400 transition">Post It</button>
+                        </div>
+                    </div>
+                    <div id="feed-items" class="space-y-6 pb-20"></div>
+                </div>
+            </div>
+
+            <div id="tab-profile" class="tab-content items-center justify-center">
+                <div class="bg-zinc-900 p-10 rounded-[40px] border border-zinc-800 w-full max-w-sm text-center shadow-2xl">
+                    <div class="relative w-32 h-32 mx-auto mb-6">
+                        <img id="edit-avatar" class="w-full h-full rounded-full object-cover border-4 border-purple-600">
+                    </div>
+                    <input id="edit-name" type="text" class="bg-transparent text-2xl font-black text-center w-full mb-2 outline-none border-b-2 border-transparent focus:border-purple-600">
+                    <input id="edit-status" type="text" class="bg-transparent text-zinc-500 text-center w-full mb-8 outline-none" placeholder="Update your status...">
+                    <button id="btn-save-profile" class="w-full py-4 bg-purple-600 rounded-2xl font-black uppercase tracking-widest shadow-lg shadow-purple-600/40 hover:bg-purple-500 transition">Save Changes</button>
+                    <button id="btn-logout" class="mt-6 text-red-500 font-bold text-xs uppercase tracking-widest opacity-50 hover:opacity-100 transition">Logout Account</button>
+                </div>
+            </div>
+
+        </section>
     </div>
-    <video id="remote-video" autoplay playsinline></video>
-    <video id="local-video" autoplay playsinline muted></video>
-    <div class="call-btns">
-        <button id="ans-btn" class="c-btn" style="background:var(--online); display:none;"><i class="fa fa-phone"></i></button>
-        <button onclick="hangUp()" class="c-btn" style="background:#f44336;"><i class="fa fa-phone-slash"></i></button>
-    </div>
-</div>
 
-<script>
-const firebaseConfig = {
-    apiKey: "AIzaSyDch7p3qsay4twoc3GcXI2Z7YI5iHazuHs",
-    authDomain: "rcnb-messenger.firebaseapp.com",
-    projectId: "rcnb-messenger",
-    storageBucket: "rcnb-messenger.firebasestorage.app",
-    messagingSenderId: "131047901393",
-    appId: "1:131047901393:web:d6f5ae21a875b6aef75df0"
-};
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, updateProfile } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, query, orderBy, onSnapshot, serverTimestamp, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth(), db = firebase.firestore();
-let me = null, activePeer = null, pc = null, localStream = null;
+        const firebaseConfig = {
+            apiKey: "AIzaSyDch7p3qsay4twoc3GcXI2Z7YI5iHazuHs",
+            authDomain: "rcnb-messenger.firebaseapp.com",
+            projectId: "rcnb-messenger",
+            storageBucket: "rcnb-messenger.firebasestorage.app",
+            messagingSenderId: "131047901393",
+            appId: "1:131047901393:web:d6f5ae21a875b6aef75df0"
+        };
 
-auth.onAuthStateChanged(u => {
-    if(u) {
-        me = u; document.getElementById('login').style.display='none'; document.getElementById('app').style.display='grid';
-        db.collection("users").doc(u.uid).set({name: u.displayName, photo: u.photoURL, uid: u.uid, online: true}, {merge:true});
-        window.onbeforeunload = () => db.collection("users").doc(me.uid).update({online: false});
-        loadUsers(); listenCalls();
-    }
-});
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const storage = getStorage(app);
+        const provider = new GoogleAuthProvider();
 
-function login() { auth.signInWithPopup(new firebase.auth.GoogleAuthProvider()); }
+        // Элементы
+        const authScreen = document.getElementById('auth-screen');
+        const mainApp = document.getElementById('main-app');
+        
+        // --- AUTH LOGIC ---
+        document.getElementById('btn-login').onclick = () => signInWithPopup(auth, provider);
+        document.getElementById('btn-logout').onclick = () => signOut(auth).then(() => location.reload());
 
-function loadUsers() {
-    db.collection("users").onSnapshot(snap => {
-        const list = document.getElementById('u-list'); list.innerHTML = "";
-        snap.forEach(doc => {
-            const u = doc.data(); if(u.uid === me.uid) return;
-            list.innerHTML += `
-                <div class="user-item" onclick="openChat('${u.uid}','${u.name}','${u.photo}')">
-                    <div class="avatar"><img src="${u.photo}"><div class="dot ${u.online?'on':''}"></div></div>
-                    <div><b>${u.name}</b><br><small style="color:#708499">${u.online?'в сети':'оффлайн'}</small></div>
-                </div>`;
+        onAuthStateChanged(auth, async (user) => {
+            if (user) {
+                authScreen.classList.add('hidden');
+                mainApp.classList.remove('hidden');
+                
+                // Инициализация юзера в базе
+                const userRef = doc(db, 'users', user.uid);
+                const userSnap = await getDoc(userRef);
+                if(!userSnap.exists()) {
+                    await setDoc(userRef, { name: user.displayName, photo: user.photoURL, status: 'Newbie' });
+                }
+                
+                updateUI(user);
+                initChat();
+                initFeed();
+            } else {
+                authScreen.classList.remove('hidden');
+                mainApp.classList.add('hidden');
+            }
         });
-    });
-}
 
-function openChat(id, name, photo) {
-    activePeer = id; document.getElementById('chat-with').innerText = name;
-    document.getElementById('call-box').style.display = 'flex';
-    document.getElementById('call-name').innerText = name;
-    document.getElementById('call-img').src = photo;
-    const cid = [me.uid, id].sort().join('_');
-    db.collection("chats").doc(cid).collection("messages").orderBy("time").onSnapshot(s => {
-        const b = document.getElementById('msgs'); b.innerHTML = "";
-        s.forEach(m => { const d = m.data(); b.innerHTML += `<div class="msg ${d.from===me.uid?'my':'his'}">${d.txt}</div>`; });
-        b.scrollTop = b.scrollHeight;
-    });
-}
-
-function send() {
-    const i = document.getElementById('m-in'); if(!i.value || !activePeer) return;
-    const cid = [me.uid, activePeer].sort().join('_');
-    db.collection("chats").doc(cid).collection("messages").add({from: me.uid, txt: i.value, time: Date.now()});
-    i.value = "";
-}
-
-// CALL ENGINE FIX
-async function startCall(video) {
-    document.getElementById('call-ui').style.display = 'flex';
-    localStream = await navigator.mediaDevices.getUserMedia({audio: true, video: video});
-    document.getElementById('local-video').srcObject = localStream;
-    document.getElementById('local-video').style.display = video ? 'block' : 'none';
-
-    pc = new RTCPeerConnection({iceServers: [{urls:'stun:stun.l.google.com:19302'}]});
-    localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
-
-    pc.ontrack = e => {
-        const remoteVid = document.getElementById('remote-video');
-        if (remoteVid.srcObject !== e.streams[0]) {
-            remoteVid.srcObject = e.streams[0];
-            remoteVid.style.display = 'block';
-            console.log("Stream received with tracks:", e.tracks);
+        function updateUI(user) {
+            document.getElementById('my-avatar').src = user.photoURL;
+            document.getElementById('my-name').innerText = user.displayName;
+            document.getElementById('edit-avatar').src = user.photoURL;
+            document.getElementById('edit-name').value = user.displayName;
         }
-    };
 
-    const callRef = db.collection('calls').doc(activePeer);
-    pc.onicecandidate = e => e.candidate && callRef.collection('cands').add(e.candidate.toJSON());
-    
-    const offer = await pc.createOffer();
-    await pc.setLocalDescription(offer);
-    await callRef.set({offer, fromName: me.displayName, video, fromPhoto: me.photoURL});
+        // --- NAVIGATION ---
+        window.showTab = (tabId) => {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('text-purple-400'));
+            document.querySelector(`[data-tab="${tabId}"]`).classList.add('text-purple-400');
+        };
 
-    callRef.onSnapshot(s => {
-        const d = s.data();
-        if(d?.answer && !pc.currentRemoteDescription) pc.setRemoteDescription(new RTCSessionDescription(d.answer));
-    });
-    callRef.collection('cands').onSnapshot(s => s.docChanges().forEach(c => c.type==='added' && pc.addIceCandidate(new RTCIceCandidate(c.doc.data()))));
-}
+        // --- MESSENGER LOGIC ---
+        const chatForm = document.getElementById('chat-form');
+        const chatInput = document.getElementById('chat-input');
+        const chatMessages = document.getElementById('chat-messages');
 
-function listenCalls() {
-    db.collection('calls').doc(me.uid).onSnapshot(async s => {
-        const d = s.data();
-        if(d && d.offer && !pc) {
-            document.getElementById('call-ui').style.display = 'flex';
-            document.getElementById('call-name').innerText = d.fromName;
-            document.getElementById('call-img').src = d.fromPhoto;
-            document.getElementById('ans-btn').style.display = 'flex';
-            document.getElementById('ans-btn').onclick = async () => {
-                document.getElementById('ans-btn').style.display = 'none';
-                localStream = await navigator.mediaDevices.getUserMedia({audio: true, video: d.video});
-                document.getElementById('local-video').srcObject = localStream;
-                document.getElementById('local-video').style.display = d.video ? 'block' : 'none';
-
-                pc = new RTCPeerConnection({iceServers: [{urls:'stun:stun.l.google.com:19302'}]});
-                localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
-                pc.ontrack = e => {
-                    const remoteVid = document.getElementById('remote-video');
-                    remoteVid.srcObject = e.streams[0];
-                    remoteVid.style.display = 'block';
-                };
-
-                const callRef = db.collection('calls').doc(me.uid);
-                pc.onicecandidate = e => e.candidate && callRef.collection('cands').add(e.candidate.toJSON());
-                await pc.setRemoteDescription(new RTCSessionDescription(d.offer));
-                const ans = await pc.createAnswer();
-                await pc.setLocalDescription(ans);
-                await callRef.update({answer: ans});
-                callRef.collection('cands').onSnapshot(s => s.docChanges().forEach(c => c.type==='added' && pc.addIceCandidate(new RTCIceCandidate(c.doc.data()))));
-            };
+        function initChat() {
+            const q = query(collection(db, "messages"), orderBy("createdAt", "asc"));
+            onSnapshot(q, (snapshot) => {
+                chatMessages.innerHTML = '';
+                snapshot.forEach(doc => {
+                    const data = doc.data();
+                    const isMe = data.uid === auth.currentUser.uid;
+                    chatMessages.innerHTML += `
+                        <div class="flex ${isMe ? 'justify-end' : 'justify-start'}">
+                            <div class="${isMe ? 'bg-purple-600' : 'bg-zinc-800'} p-3 px-5 rounded-2xl max-w-[80%] shadow-lg">
+                                <p class="text-[10px] opacity-50 mb-1">${isMe ? 'Me' : (data.name || 'User')}</p>
+                                <p class="text-sm font-medium">${data.text}</p>
+                            </div>
+                        </div>
+                    `;
+                });
+                chatMessages.scrollTo(0, chatMessages.scrollHeight);
+            });
         }
-        if(!d && pc) hangUp();
-    });
-}
 
-function hangUp() {
-    if(pc) pc.close();
-    if(localStream) localStream.getTracks().forEach(t => t.stop());
-    pc = null; localStream = null;
-    db.collection('calls').doc(me.uid).delete();
-    db.collection('calls').doc(activePeer || 'null').delete();
-    document.getElementById('call-ui').style.display = 'none';
-    document.getElementById('remote-video').srcObject = null;
-}
-</script>
+        chatForm.onsubmit = async (e) => {
+            e.preventDefault();
+            if (!chatInput.value.trim()) return;
+            const text = chatInput.value;
+            chatInput.value = '';
+            await addDoc(collection(db, "messages"), {
+                text,
+                uid: auth.currentUser.uid,
+                name: auth.currentUser.displayName,
+                createdAt: serverTimestamp()
+            });
+        };
+
+        // --- SOCIAL FEED LOGIC ---
+        const btnPost = document.getElementById('btn-post');
+        const feedText = document.getElementById('feed-text');
+        const feedFile = document.getElementById('feed-file');
+        const feedItems = document.getElementById('feed-items');
+
+        async function initFeed() {
+            const q = query(collection(db, "posts"), orderBy("createdAt", "desc"));
+            onSnapshot(q, (snapshot) => {
+                feedItems.innerHTML = '';
+                snapshot.forEach(doc => {
+                    const post = doc.data();
+                    let mediaHtml = '';
+                    if (post.media) {
+                        mediaHtml = post.type.includes('video') 
+                            ? `<video src="${post.media}" controls class="video-post mt-3"></video>`
+                            : `<img src="${post.media}" class="rounded-xl mt-3 w-full">`;
+                    }
+                    feedItems.innerHTML += `
+                        <div class="bg-zinc-900/50 border border-zinc-800 p-6 rounded-3xl">
+                            <div class="flex items-center gap-3 mb-4">
+                                <img src="${post.userPhoto}" class="w-10 h-10 rounded-full">
+                                <div>
+                                    <p class="font-black text-sm uppercase">${post.userName}</p>
+                                    <p class="text-[10px] text-zinc-500">Recently posted</p>
+                                </div>
+                            </div>
+                            <p class="text-lg">${post.content}</p>
+                            ${mediaHtml}
+                        </div>
+                    `;
+                });
+            });
+        }
+
+        btnPost.onclick = async () => {
+            const file = feedFile.files[0];
+            let mediaUrl = null;
+            let type = '';
+            
+            if (file) {
+                const sRef = ref(storage, `posts/${Date.now()}_${file.name}`);
+                await uploadBytes(sRef, file);
+                mediaUrl = await getDownloadURL(sRef);
+                type = file.type;
+            }
+
+            await addDoc(collection(db, "posts"), {
+                content: feedText.value,
+                media: mediaUrl,
+                type: type,
+                uid: auth.currentUser.uid,
+                userName: auth.currentUser.displayName,
+                userPhoto: auth.currentUser.photoURL,
+                createdAt: serverTimestamp()
+            });
+            feedText.value = '';
+            feedFile.value = '';
+        };
+
+        // --- PROFILE UPDATE ---
+        document.getElementById('btn-save-profile').onclick = async () => {
+            const newName = document.getElementById('edit-name').value;
+            const newStatus = document.getElementById('edit-status').value;
+            
+            await updateProfile(auth.currentUser, { displayName: newName });
+            await setDoc(doc(db, 'users', auth.currentUser.uid), {
+                name: newName,
+                status: newStatus
+            }, { merge: true });
+            
+            document.getElementById('my-name').innerText = newName;
+            alert('Profile Updated 🔥');
+        };
+
+    </script>
 </body>
 </html>
